@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/TheKingSnoop/project-a-backend/issues"
   },
-  "homepage": "https://github.com/TheKingSnoop/project-a-backend#readme"
+  "homepage": "https://github.com/TheKingSnoop/project-a-backend#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
