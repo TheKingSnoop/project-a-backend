@@ -3,9 +3,9 @@ import { GetUsers } from '../Functions/users.js';
 
 const router = express.Router();
 
-router.get('/all-users', (req, res) => {
+router.get('/all-users', async (req, res) => {
     try {
-        const users = GetUsers();
+        const users = await GetUsers();
         if (users.success) {
             res.status(200).send(users)
         } else {

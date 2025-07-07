@@ -1,7 +1,5 @@
 export const GetUsers = async () => {
     try {
-
-        console.log("Fetching all users...");
         // below is just an example for now
         const users = [
             {
