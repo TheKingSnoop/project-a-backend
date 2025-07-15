@@ -1,5 +1,6 @@
 import express from "express";
 import usersRouter from './Routes/users.js'
+import invoicesRouter from './Routes/invoices.js';
 
 const app = express();
 const port = 3000;
@@ -9,6 +10,8 @@ app.get("/", (req, res) => {
 });
 
 app.use('/users', usersRouter);
+
+app.use('/invoices', invoicesRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
