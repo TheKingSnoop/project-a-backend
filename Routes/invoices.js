@@ -37,20 +37,22 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/generate', async (req, res) => {
-    const invoiceData = req.body;
-    try {
-        const result = await GenerateInvoice(invoiceData);
-        if (result.success) {
-            res.status(201).send(result);
-        } else {
-            res.status(500).send(result);
-        }
-    } catch (error) {
-        res.status(500).send({
-            success: false,
-            message: error.message
-        })
-    }
+    console.log('Generating invoice...', req.body);
+    
+    // const invoiceData = req.body;
+    // try {
+    //     const result = await GenerateInvoice(invoiceData);
+    //     if (result.success) {
+    //         res.status(201).send(result);
+    //     } else {
+    //         res.status(500).send(result);
+    //     }
+    // } catch (error) {
+    //     res.status(500).send({
+    //         success: false,
+    //         message: error.message
+    //     })
+    // }
 })
 
 export default router;
