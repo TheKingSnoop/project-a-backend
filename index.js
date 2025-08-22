@@ -47,8 +47,6 @@ app.get("/test-s3", async (req, res) => {
     });
   } catch (error) {
     console.error("Error connecting to S3:", error);
-    res
-      .status(500)
-      .json({ message: "S3 connection failed", error: error.message });
+    res.status(500).json({ message: "S3 connection failed", error: error.message });
   }
 });
