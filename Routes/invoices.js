@@ -5,74 +5,56 @@ import { GenerateInvoice, GetInvoiceById, GetInvoices } from "../Functions/invoi
 const router = express.Router();
 
 router.get("/all-invoices", async (req, res) => {
-  try {
-    const invoices = await GetInvoices();
-    if (invoices.success) {
-      res.status(200).send(invoices);
-    } else {
-      res.status(500).send(invoices);
+    try {
+        const invoices = await GetInvoices();
+        if (invoices.success) {
+            res.status(200).send(invoices);
+        } else {
+            res.status(500).send(invoices);
+        }
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: "error.message",
+        });
     }
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "error.message",
-    });
-  }
 });
 
-// router.post('/generate', async (req, res) => {
-//     try {
-//         const pdfBuffer = await GenerateInvoice(req.body);
-
-//         res.set({
-//             'Content-Type': 'application/pdf',
-//             'Content-Disposition': 'attachment; filename=invoice.pdf'
-//         });
-//         res.send(pdfBuffer);
-
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send({
-//             success: false,
-//             message: error.message
-//         });
-//     }
-// });
-
 router.get("/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const invoice = await GetInvoiceById(id);
-    if (invoice.success) {
-      res.status(200).send(invoice);
-    } else {
-      res.status(404).send(invoice);
+    const { id } = req.params;
+    try {
+        const invoice = await GetInvoiceById(id);
+        if (invoice.success) {
+            res.status(200).send(invoice);
+        } else {
+            res.status(404).send(invoice);
+        }
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: error.message,
+        });
     }
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
-  }
 });
 
 router.post("/generate", async (req, res) => {
-  const invoiceData = req.body;
-  try {
-    const result = await GenerateInvoice(invoiceData);
-    if (result.success) {
-      res.status(201).send(result);
-    } else {
-      res.status(500).send(result);
+    const invoiceData = req.body;
+    try {
+        const result = await GenerateInvoice(invoiceData);
+        if (result.success) {
+            res.status(201).send(result);
+        } else {
+            res.status(500).send(result);
+        }
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: error.message,
+        });
     }
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error.message,
-    });
-  }
 });
 
+// template for future features
 // Route to get download URL for an invoice
 // router.get("/download/:s3Key", async (req, res) => {
 //   const { s3Key } = req.params;
