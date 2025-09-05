@@ -1,5 +1,6 @@
 import express from "express";
 import { GenerateInvoice, GetInvoiceById, GetInvoices } from "../Functions/invoices.js";
+import invoiceSchema from "../Schemas/invoice.js";
 // GetInvoiceDownloadUrl, DeleteInvoiceFromS3
 
 const router = express.Router();
@@ -90,5 +91,28 @@ router.post("/generate", async (req, res) => {
 //     });
 //   }
 // });
+
+//Mongodb invoice TEST
+
+router.post("/add-invoice", async (req, res) => {
+    try {
+        const { title, referenceNumber } = req.body;
+        const newInvoice = new invoiceSchema({
+            title,
+            referenceNumber
+        });
+        await newInvoice.save();
+        res.status(201).send({
+            success: true,
+            message: "Invoice added successfully",
+            invoice: newInvoice
+        });
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: error.message,
+        });
+    }
+});
 
 export default router;
