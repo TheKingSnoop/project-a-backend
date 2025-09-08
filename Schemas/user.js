@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
 
-const userSchema = mongoose.model("User" , mongoose.Schema({
+const invoiceSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+    },
+    referenceNumber: {
+        type: Number,
+        required: true,
+    },
+});
+const userSchema = mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -17,7 +27,13 @@ const userSchema = mongoose.model("User" , mongoose.Schema({
     password: {
         type: String,
         required: true,
-    }
-}));
+    },
+    dateJoined: {
+        type: Date,
+        default: Date.now,
+    },
+    invoices: [invoiceSchema],
 
-export default userSchema;
+});
+
+export default mongoose.model("User", userSchema);

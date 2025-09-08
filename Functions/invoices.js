@@ -2,6 +2,8 @@ import puppeteer from "puppeteer";
 import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
+import invoiceSchema from "../Schemas/invoice.js";
+import Users from "../Schemas/user.js";
 
 dotenv.config();
 
@@ -142,3 +144,33 @@ export const GenerateInvoice = async (invoiceData) => {
 
 //     await browser.close();
 //     return pdfBuffer;
+
+export const AddInvoiceToDB = async (invoiceData) => {
+    try {
+        const { title, referenceNumber, email } = invoiceData;
+        const user = await Users.findOne({ email: email });
+        const invoice = {
+            title,
+            referenceNumber
+        }
+        user.invoices.push(invoice);
+        // const newInvoice = new invoiceSchema({
+        //     title,
+        //     referenceNumber
+        // });
+        await user.save();
+        return {
+            success: true,
+            message: "Invoice added successfully",
+            invoice: user
+        }
+    }
+    catch (error) {
+        return {
+            success: false,
+            message: error.message
+        }
+    }
+
+
+}

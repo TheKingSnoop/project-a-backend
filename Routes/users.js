@@ -1,19 +1,17 @@
 import express from "express";
-import { GetUsers } from "../Functions/users.js";
-import userSchema from "../schemas/user.js";
+import { AddUser, GetUsers } from "../Functions/users.js";
+import userSchema from "../Schemas/user.js";
 
 const router = express.Router();
 
 router.get("/all-users", async (req, res) => {
   try {
-    const users = await userSchema.find();
-    if (users) {
-      res.status(200).send(users);
+    const result = await GetUsers();
+
+    if (result.success) {
+      res.status(200).send(result);
     } else {
-      res.status(500).send({
-        success: false,
-        message: "No users found",
-      });
+      res.status(500).send(result);
     }
   } catch (error) {
     res.status(500).send({
@@ -25,28 +23,13 @@ router.get("/all-users", async (req, res) => {
 
 router.post("/add-user", async (req, res) => {
   try {
-    const { name, surname, email, password } = req.body;
-    const isExistingUser = await userSchema.exists({ email: email });
-    if (isExistingUser) {
-      return res.status(400).send({
-        success: false,
-        message: "Email already registered",
-      });
+    const newUserData = req.body;
+    const result = await AddUser(newUserData)
+    if (result.success) {
+      res.status(201).send(result);
+    } else {
+      res.status(500).send(result)
     }
-    const newUser = new userSchema({
-      name,
-      surname,
-      email,
-      password
-    });
-
-    await newUser.save();
-
-    res.status(201).send({
-      success: true,
-      message: "User added successfully",
-      user: newUser
-    });
   } catch (error) {
     res.status(500).send({
       success: false,

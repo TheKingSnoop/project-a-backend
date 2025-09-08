@@ -1,5 +1,5 @@
 import express from "express";
-import { GenerateInvoice, GetInvoiceById, GetInvoices } from "../Functions/invoices.js";
+import { AddInvoiceToDB, GenerateInvoice, GetInvoiceById, GetInvoices } from "../Functions/invoices.js";
 import invoiceSchema from "../Schemas/invoice.js";
 // GetInvoiceDownloadUrl, DeleteInvoiceFromS3
 
@@ -95,18 +95,14 @@ router.post("/generate", async (req, res) => {
 //Mongodb invoice TEST
 
 router.post("/add-invoice", async (req, res) => {
+    const newInvoiceData = req.body;
     try {
-        const { title, referenceNumber } = req.body;
-        const newInvoice = new invoiceSchema({
-            title,
-            referenceNumber
-        });
-        await newInvoice.save();
-        res.status(201).send({
-            success: true,
-            message: "Invoice added successfully",
-            invoice: newInvoice
-        });
+        const result = await AddInvoiceToDB(newInvoiceData);
+        if (result.success) {
+            res.status(201).send(result);
+        } else {
+            res.status(500).send(result);
+        }
     } catch (error) {
         res.status(500).send({
             success: false,
