@@ -147,17 +147,69 @@ export const GenerateInvoice = async (invoiceData) => {
 
 export const AddInvoiceToDB = async (invoiceData) => {
     try {
-        const { title, referenceNumber, email } = invoiceData;
-        const user = await Users.findOne({ email: email });
+        const {
+            id,
+            vatPercentage,
+            invoiceItemsTotal,
+            vat,
+            finalTotal,
+            invoiceItems,
+            titleOfInvoice,
+            nameOfYourCompany,
+            yourName,
+            yourSurname,
+            yourAddress,
+            yourCity,
+            yourPostCode,
+            yourEmail,
+            phoneNumber,
+            companyName,
+            clientName,
+            clientSurname,
+            clientAddress,
+            clientCity,
+            clientPostCode,
+            clientEmail,
+            referenceNumber,
+            issueDate,
+            dueDate,
+            nameOnAccount,
+            sortCode,
+            accountNumber,
+            bankName
+        } = invoiceData;
+        const user = await Users.findOne({ _id: id });
         const invoice = {
-            title,
-            referenceNumber
+            vatPercentage,
+            invoiceItemsTotal,
+            vat,
+            finalTotal,
+            invoiceItems,
+            titleOfInvoice,
+            nameOfYourCompany,
+            yourName,
+            yourSurname,
+            yourAddress,
+            yourCity,
+            yourPostCode,
+            yourEmail,
+            phoneNumber,
+            companyName,
+            clientName,
+            clientSurname,
+            clientAddress,
+            clientCity,
+            clientPostCode,
+            clientEmail,
+            referenceNumber,
+            issueDate,
+            dueDate,
+            nameOnAccount,
+            sortCode,
+            accountNumber,
+            bankName
         }
         user.invoices.push(invoice);
-        // const newInvoice = new invoiceSchema({
-        //     title,
-        //     referenceNumber
-        // });
         await user.save();
         return {
             success: true,

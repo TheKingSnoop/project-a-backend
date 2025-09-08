@@ -1,15 +1,6 @@
 import mongoose from "mongoose";
+import invoiceSchema from "./invoice.js";
 
-const invoiceSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true,
-    },
-    referenceNumber: {
-        type: Number,
-        required: true,
-    },
-});
 const userSchema = mongoose.Schema({
     name: {
         type: String,
