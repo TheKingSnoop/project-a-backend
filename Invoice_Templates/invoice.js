@@ -18,7 +18,7 @@ export function InvoiceTemplate(invoiceData) {
                     <p class="blue-text"><strong>${invoiceData.nameOfYourCompany ? invoiceData.nameOfYourCompany : ""}</strong></p>
                     <p>${invoiceData.yourAddress}</p>
                     <p>${invoiceData.yourCity}, ${invoiceData.yourPostCode}</p>
-                    <p>${invoiceData.yourPhoneNumber}</p>
+                    <p>${invoiceData.phoneNumber}</p>
                     <p>${invoiceData.yourEmail}</p>
                 </div>
                 <div class="billing-info">
@@ -56,7 +56,7 @@ export function InvoiceTemplate(invoiceData) {
                 </table>
                 <div class="invoice-total">
                     <h3 class="blue-text">Invoice Total:</h3>
-                    <p>Subtotal: £${invoiceData['invoiceItems-total'].amount}</p>
+                    <p>Subtotal: £${invoiceData.invoiceItemsTotal}</p>
                     <p>VAT (${invoiceData.vatPercentage}%): £${invoiceData.vat}</p>
                     <h4 style="border-top: 1px solid #005ac2; display: inline; border-bottom: 1px solid #005ac2; background-color: #d8e2ff;"><strong>Total: £${invoiceData.finalTotal}</strong></h4>
                 </div>

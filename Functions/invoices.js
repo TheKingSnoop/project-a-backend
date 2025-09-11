@@ -53,6 +53,11 @@ export const GetInvoiceById = async (id) => {
 };
 
 export const GenerateInvoice = async (invoiceData) => {
+    // Generate unique filename for the PDF
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
+
+    await AddInvoiceToDB(invoiceData, fileName);
     try {
         // Generate PDF with Puppeteer
         const browser = await puppeteer.launch();
@@ -64,10 +69,6 @@ export const GenerateInvoice = async (invoiceData) => {
         const pdfBuffer = await page.pdf({ format: "A4" });
 
         await browser.close();
-
-        // Generate unique filename for the PDF
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
 
         // Upload PDF to S3
         const uploadParams = {
@@ -145,7 +146,7 @@ export const GenerateInvoice = async (invoiceData) => {
 //     await browser.close();
 //     return pdfBuffer;
 
-export const AddInvoiceToDB = async (invoiceData) => {
+export const AddInvoiceToDB = async (invoiceData, fileName) => {
     try {
         const {
             id,
@@ -207,7 +208,8 @@ export const AddInvoiceToDB = async (invoiceData) => {
             nameOnAccount,
             sortCode,
             accountNumber,
-            bankName
+            bankName,
+            awsKey: fileName
         }
         user.invoices.push(invoice);
         await user.save();

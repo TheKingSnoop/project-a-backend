@@ -1,6 +1,9 @@
 import mongoose, { trusted } from "mongoose";
 
 const invoiceSchema = new mongoose.Schema({
+    awsKey: {
+        type: String
+    },
     vatPercentage: {
         type: Number,
     },
