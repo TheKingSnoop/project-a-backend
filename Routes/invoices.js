@@ -38,10 +38,10 @@ router.post("/generate", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
-    const { id } = req.params;
+router.get("/:userId/:invoiceId", async (req, res) => {
+    const { userId, invoiceId } = req.params;
     try {
-        const invoice = await GetInvoiceById(id);
+        const invoice = await GetInvoiceById(userId, invoiceId);
         if (invoice.success) {
             res.status(200).send(invoice);
         } else {
