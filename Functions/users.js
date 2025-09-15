@@ -1,11 +1,11 @@
-import userSchema from "../Schemas/user.js";
+import Users from "../Schemas/user.js";
 
 export const GetUsers = async () => {
   try {
-    const users = await userSchema.find();
+    const users = await Users.find();
     return {
       success: true,
-      users: users
+      payload: users
     };
   } catch (error) {
     return {
@@ -18,14 +18,14 @@ export const GetUsers = async () => {
 export const AddUser = async (userData) => {
   try {
     const { name, surname, email, password } = userData;
-    const isExistingUser = await userSchema.exists({ email: email });
+    const isExistingUser = await Users.exists({ email: email });
     if (isExistingUser) {
       return {
         success: false,
         message: "Email already registered",
       };
     }
-    const newUser = new userSchema({
+    const newUser = new Users({
       name,
       surname,
       email,

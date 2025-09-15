@@ -2,7 +2,6 @@ import puppeteer from "puppeteer";
 import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
-import invoiceSchema from "../Schemas/invoice.js";
 import Users from "../Schemas/user.js";
 
 dotenv.config();
