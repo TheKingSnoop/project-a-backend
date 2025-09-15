@@ -1,5 +1,5 @@
 import express from "express";
-import { GenerateInvoice, GetInvoiceById, GetInvoices } from "../Functions/invoices.js";
+import { AddInvoiceToDB, GenerateInvoice, GetInvoiceById, GetInvoices } from "../Functions/invoices.js";
 // GetInvoiceDownloadUrl, DeleteInvoiceFromS3
 
 const router = express.Router();
@@ -20,23 +20,6 @@ router.get("/all-invoices", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
-    const { id } = req.params;
-    try {
-        const invoice = await GetInvoiceById(id);
-        if (invoice.success) {
-            res.status(200).send(invoice);
-        } else {
-            res.status(404).send(invoice);
-        }
-    } catch (error) {
-        res.status(500).send({
-            success: false,
-            message: error.message,
-        });
-    }
-});
-
 router.post("/generate", async (req, res) => {
     const invoiceData = req.body;
     try {
@@ -53,6 +36,24 @@ router.post("/generate", async (req, res) => {
         });
     }
 });
+
+router.get("/get-invoice/:userId/:invoiceId", async (req, res) => {
+    const { userId, invoiceId } = req.params;
+    try {
+        const invoice = await GetInvoiceById(userId, invoiceId);
+        if (invoice.success) {
+            res.status(200).send(invoice);
+        } else {
+            res.status(404).send(invoice);
+        }
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
 
 // template for future features
 // Route to get download URL for an invoice

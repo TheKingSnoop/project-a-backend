@@ -16,24 +16,25 @@ export function InvoiceTemplate(invoiceData) {
                 <h1 class="title blue-text">INVOICE</h1>
                 <div class="your-company">
                     <p class="blue-text"><strong>${invoiceData.nameOfYourCompany ? invoiceData.nameOfYourCompany : ""}</strong></p>
+                    <p>${invoiceData.yourName} ${invoiceData.yourSurname}</p>
                     <p>${invoiceData.yourAddress}</p>
                     <p>${invoiceData.yourCity}, ${invoiceData.yourPostCode}</p>
-                    <p>${invoiceData.yourPhoneNumber}</p>
-                    <p>${invoiceData.yourEmail}</p>
+                    <p>${invoiceData.phoneNumber ? invoiceData.phoneNumber : ""}</p>
+                    <p>${invoiceData.yourEmail ? invoiceData.yourEmail : ""}</p>
                 </div>
                 <div class="billing-info">
                     <div class="bill-to">
                         <h3 class="blue-text">Bill To:</h3>
-                        <p>${invoiceData.companyName}</p>
-                        <p>${invoiceData.clientName}</p>
+                        <p>${invoiceData.companyName ? invoiceData.companyName : ""}</p>
+                        <p>${invoiceData.clientName} ${invoiceData.clientSurname}</p>
                         <p>${invoiceData.clientAddress}</p>
                         <p>${invoiceData.clientCity}, ${invoiceData.clientPostCode}</p>
-                        <p>${invoiceData.clientEmail}</p>
+                        <p>${invoiceData.clientEmail ? invoiceData.clientEmail : ""}</p>
                     </div>
                     <div class="invoice-box">
                         <h3 class="blue-text">Invoice Number: ${invoiceData.referenceNumber}</h3>
                         <p>Invoice Date: ${invoiceData.issueDate}</p>
-                        <p>Due Date: ${invoiceData.dueDate}</p>
+                        <p>Due Date: ${invoiceData.dueDate ? invoiceData.dueDate : ""}</p>
                     </div>
                 </div>
                 <table border="1" cellpadding="10" cellspacing="0" width="100%">
@@ -56,15 +57,16 @@ export function InvoiceTemplate(invoiceData) {
                 </table>
                 <div class="invoice-total">
                     <h3 class="blue-text">Invoice Total:</h3>
-                    <p>Subtotal: £${invoiceData['invoiceItems-total'].amount}</p>
-                    <p>VAT (${invoiceData.vatPercentage}%): £${invoiceData.vat}</p>
+                    <p>Subtotal: £${invoiceData.invoiceItemsTotal}</p>
+                    ${invoiceData.vatPercentage ? `<p>VAT (${invoiceData.vatPercentage}%): £${invoiceData.vat}</p>` : ""}
                     <h4 style="border-top: 1px solid #005ac2; display: inline; border-bottom: 1px solid #005ac2; background-color: #d8e2ff;"><strong>Total: £${invoiceData.finalTotal}</strong></h4>
                 </div>
                 <div class="bank-details">
                     <h3 class="blue-text">Bank Details:</h3>
+                    <p>Name on Account: ${invoiceData.nameOnAccount}</p>
                     <p>Sort Code: ${invoiceData.sortCode}</p>
                     <p>Account Number: ${invoiceData.accountNumber}</p>
-                    <p>Bank Name: ${invoiceData.bankName}</p>
+                    ${invoiceData.bankName ? `<p>Bank Name: ${invoiceData.bankName}</p>` : ""}
                 </div>
             </body>
         </html>

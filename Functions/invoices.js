@@ -2,6 +2,7 @@ import puppeteer from "puppeteer";
 import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
+import Users from "../Schemas/user.js";
 
 dotenv.config();
 
@@ -32,25 +33,39 @@ export const GetInvoices = async () => {
     }
 };
 
-export const GetInvoiceById = async (id) => {
+export const GetInvoiceById = async (userId, invoiceId) => {
     try {
-        const invoice = [
-            {
-                id: id,
-                amount: 100.0,
-                date: "01-01-2025",
-            },
-        ];
+        const user = await Users.findOne({ _id: userId })
+        const invoice = user.invoices.filter(inv => inv._id.toString() === invoiceId)
+        if (invoice.length === 0) {
+            return {
+                success: false,
+                message: "Invoice not found for this user",
+            };
+        }
+        console.log(invoice)
+
         return {
             success: true,
             payload: invoice,
         };
     } catch (error) {
+        if (error.message.includes("Cast to ObjectId failed")) {
+            return {
+                success: false,
+                message: "Invalid user ID",
+            };
+        }
         return { success: false, message: error.message };
     }
 };
 
 export const GenerateInvoice = async (invoiceData) => {
+    // Generate unique filename for the PDF
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
+
+    await AddInvoiceToDB(invoiceData, fileName);
     try {
         // Generate PDF with Puppeteer
         const browser = await puppeteer.launch();
@@ -59,13 +74,13 @@ export const GenerateInvoice = async (invoiceData) => {
         const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
 
         await page.setContent(invoiceHtmlTemplate);
-        const pdfBuffer = await page.pdf({ format: "A4" });
+        const pdfBuffer = await page.pdf({
+            format: "A4",
+            footerTemplate: '<div style="font-size:8px; width:100%; text-align:center; margin-bottom:5px;">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
+            displayHeaderFooter: true, margin: { top: "40px", bottom: "60px", left: "20px", right: "20px" }
+        });
 
         await browser.close();
-
-        // Generate unique filename for the PDF
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
 
         // Upload PDF to S3
         const uploadParams = {
@@ -142,3 +157,84 @@ export const GenerateInvoice = async (invoiceData) => {
 
 //     await browser.close();
 //     return pdfBuffer;
+
+export const AddInvoiceToDB = async (invoiceData, fileName) => {
+    try {
+        const {
+            id,
+            vatPercentage,
+            invoiceItemsTotal,
+            vat,
+            finalTotal,
+            invoiceItems,
+            titleOfInvoice,
+            nameOfYourCompany,
+            yourName,
+            yourSurname,
+            yourAddress,
+            yourCity,
+            yourPostCode,
+            yourEmail,
+            phoneNumber,
+            companyName,
+            clientName,
+            clientSurname,
+            clientAddress,
+            clientCity,
+            clientPostCode,
+            clientEmail,
+            referenceNumber,
+            issueDate,
+            dueDate,
+            nameOnAccount,
+            sortCode,
+            accountNumber,
+            bankName
+        } = invoiceData;
+        const user = await Users.findOne({ _id: id });
+        const invoice = {
+            vatPercentage,
+            invoiceItemsTotal,
+            vat,
+            finalTotal,
+            invoiceItems,
+            titleOfInvoice,
+            nameOfYourCompany,
+            yourName,
+            yourSurname,
+            yourAddress,
+            yourCity,
+            yourPostCode,
+            yourEmail,
+            phoneNumber,
+            companyName,
+            clientName,
+            clientSurname,
+            clientAddress,
+            clientCity,
+            clientPostCode,
+            clientEmail,
+            referenceNumber,
+            issueDate,
+            dueDate,
+            nameOnAccount,
+            sortCode,
+            accountNumber,
+            bankName,
+            awsKey: fileName
+        }
+        user.invoices.push(invoice);
+        await user.save();
+        return {
+            success: true,
+            message: "Invoice added successfully",
+            invoice: user
+        }
+    }
+    catch (error) {
+        return {
+            success: false,
+            message: error.message
+        }
+    }
+}

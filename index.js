@@ -4,11 +4,25 @@ import dotenv from "dotenv";
 import usersRouter from "./Routes/users.js";
 import s3 from "./s3Client.js";
 import invoicesRouter from "./Routes/invoices.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  dbName: "project-a"
+})
+.then(() => {
+  console.log("MongoDB connected successfully");
+})
+.catch((error) => {
+  console.error("MongoDB connection error:", error);
+});
 
 // Configure CORS to allow requests from frontend
 const allowedOrigins = process.env.ALLOWED_ORIGINS;

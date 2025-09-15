@@ -1,20 +1,38 @@
 import express from "express";
-import { GetUsers } from "../Functions/users.js";
+import { AddUser, GetUsers } from "../Functions/users.js";
 
 const router = express.Router();
 
 router.get("/all-users", async (req, res) => {
   try {
-    const users = await GetUsers();
-    if (users.success) {
-      res.status(200).send(users);
+    const result = await GetUsers();
+
+    if (result.success) {
+      res.status(200).send(result);
     } else {
-      res.status(500).send(users);
+      res.status(500).send(result);
     }
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "error.message",
+      message: error.message,
+    });
+  }
+});
+
+router.post("/add-user", async (req, res) => {
+  try {
+    const newUserData = req.body;
+    const result = await AddUser(newUserData)
+    if (result.success) {
+      res.status(201).send(result);
+    } else {
+      res.status(500).send(result)
+    }
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
     });
   }
 });
