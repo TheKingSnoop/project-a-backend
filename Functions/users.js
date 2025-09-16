@@ -1,4 +1,6 @@
 import Users from "../Schemas/user.js";
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export const GetUsers = async () => {
   try {
@@ -15,9 +17,43 @@ export const GetUsers = async () => {
   }
 };
 
+export const Login = async (loginData) => {
+  try {
+    const { email, password } = loginData;
+    const user = await Users.findOne({ email: email });
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+    if (user && bcrypt.compareSync(password, user.password) === false) {
+      return {
+        success: false,
+        message: "Incorrect password",
+      };
+    } else {
+       const token = jwt.sign({ id: user._id, name: user.name }, process.env.JWT_SECRET, {
+        expiresIn: '1h',
+      });
+      return {
+        success: true,
+        message: "Login successful",
+        token: token,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+}
+
 export const AddUser = async (userData) => {
   try {
     const { name, surname, email, password } = userData;
+    const hashedPassword = await bcrypt.hash(password, 10);
     const isExistingUser = await Users.exists({ email: email });
     if (isExistingUser) {
       return {
@@ -29,7 +65,7 @@ export const AddUser = async (userData) => {
       name,
       surname,
       email,
-      password
+      password: hashedPassword
     });
 
     await newUser.save();

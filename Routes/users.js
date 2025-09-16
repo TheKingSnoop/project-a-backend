@@ -1,5 +1,5 @@
 import express from "express";
-import { AddUser, GetUsers } from "../Functions/users.js";
+import { AddUser, GetUsers, Login } from "../Functions/users.js";
 
 const router = express.Router();
 
@@ -28,6 +28,23 @@ router.post("/add-user", async (req, res) => {
       res.status(201).send(result);
     } else {
       res.status(500).send(result)
+    }
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  try {
+    const loginData = req.body;
+    const result = await Login(loginData);
+    if (result.success) {
+      res.status(200).send(result);
+    } else {
+      res.status(401).send(result);
     }
   } catch (error) {
     res.status(500).send({
