@@ -3,27 +3,23 @@ import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
 import Users from "../Schemas/user.js";
+import Invoices from "../Schemas/invoice.js";
 
 dotenv.config();
 
-export const GetInvoices = async () => {
+export const GetInvoicesByUserId = async (userId) => {
   try {
-    // below is just an example for now
-    const invoices = [
-      {
-        id: 1,
-        amount: 100.0,
-        date: "01-01-2025",
-      },
-      {
-        id: 2,
-        amount: 200.0,
-        date: "01-02-2025",
-      },
-    ];
+    const user = await Users.findOne({ _id: userId });
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+
     return {
       success: true,
-      payload: invoices,
+      payload: user.invoices,
     };
   } catch (error) {
     return {
@@ -239,3 +235,22 @@ export const AddInvoiceToDB = async (invoiceData, fileName) => {
     };
   }
 };
+
+export const DeleteInvoiceById = async (userId, invoiceId)=> {
+  try {
+    const user = await Users.findOne({ _id: userId });
+    user.invoices = user.invoices.filter((inv) => inv._id.toString() !== invoiceId);
+    const deleteInvoice = await user.save();
+    if(deleteInvoice) {
+      return {
+        success: true,
+        message: "Invoice deleted successfully",
+      }
+    }
+  } catch (error){
+    return {
+      success: false,
+      message: error.message,
+    }
+  }
+}

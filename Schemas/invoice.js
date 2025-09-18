@@ -110,8 +110,11 @@ const invoiceSchema = new mongoose.Schema({
     },
     bankName: {
         type: String
+    },
+    dateCreated: {
+        type: Date,
+        default: Date.now
     }
-
 });
 
 export default invoiceSchema;

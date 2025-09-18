@@ -1,23 +1,7 @@
 import express from "express";
-import { GenerateInvoice, GetInvoiceById, GetInvoices, GetInvoiceDownloadUrl } from "../Functions/invoices.js";
+import { GenerateInvoice, GetInvoiceById, GetInvoiceDownloadUrl, GetInvoicesByUserId, DeleteInvoiceById } from "../Functions/invoices.js";
 
 const router = express.Router();
-
-router.get("/all-invoices", async (req, res) => {
-  try {
-    const invoices = await GetInvoices();
-    if (invoices.success) {
-      res.status(200).send(invoices);
-    } else {
-      res.status(500).send(invoices);
-    }
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "error.message",
-    });
-  }
-});
 
 router.post("/generate", async (req, res) => {
   const invoiceData = req.body;
@@ -70,6 +54,39 @@ router.get("/get-invoice/:userId/:invoiceId", async (req, res) => {
     });
   }
 });
+
+router.get("/get-all-invoices/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const invoices = await GetInvoicesByUserId(userId);
+    if (invoices.success) {
+      res.status(200).send(invoices);
+    } else {
+      res.status(404).send(invoices);
+    }
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.delete("/delete/:userId/:invoiceId", async (req, res) => {
+  const { userId, invoiceId } = req.params;
+  try {
+    const result = await DeleteInvoiceById(userId, invoiceId);
+    if (result.success) {
+      res.status(200).send(result);
+    } else {
+      res.status(500).send(result);
+    }
+} catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message
+    })
+}})
 
 // // Route to delete an invoice from S3
 // router.delete("/delete/:s3Key", async (req, res) => {
