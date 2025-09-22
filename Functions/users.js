@@ -52,7 +52,7 @@ export const Login = async (loginData) => {
 
 export const AddUser = async (userData) => {
   try {
-    const { name, surname, email, password } = userData;
+    const { name, surname, email, password, title } = userData;
     const hashedPassword = await bcrypt.hash(password, 10);
     const isExistingUser = await Users.exists({ email: email });
     if (isExistingUser) {
@@ -62,6 +62,7 @@ export const AddUser = async (userData) => {
       };
     }
     const newUser = new Users({
+      title,
       name,
       surname,
       email,

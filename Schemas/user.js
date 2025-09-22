@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 import invoiceSchema from "./invoice.js";
 
 const userSchema = mongoose.Schema({
+    title: {
+        type: String,
+    },
     name: {
         type: String,
         required: true,
