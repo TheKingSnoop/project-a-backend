@@ -1,5 +1,5 @@
 import express from "express";
-import { GenerateInvoice, GetInvoiceById, GetInvoiceDownloadUrl, GetInvoicesByUserId, DeleteInvoiceById } from "../Functions/invoices.js";
+import { GenerateInvoice, GetInvoiceById, GetInvoiceDownloadUrl, GetInvoicesByUserId, DeleteInvoiceById, UpdateInvoiceById } from "../Functions/invoices.js";
 
 const router = express.Router();
 
@@ -63,6 +63,25 @@ router.get("/get-all-invoices/:userId", async (req, res) => {
       res.status(200).send(invoices);
     } else {
       res.status(404).send(invoices);
+    }
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.put("/update/:userId/:invoiceId", async (req, res) => {
+  const { userId, invoiceId } = req.params;
+  const updatedData = req.body;
+
+  try {
+    const result = await UpdateInvoiceById(userId, invoiceId, updatedData);
+    if (result.success) {
+      res.status(200).send(result);
+    } else {
+      res.status(404).send(result);
     }
   } catch (error) {
     res.status(500).send({

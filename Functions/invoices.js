@@ -254,3 +254,34 @@ export const DeleteInvoiceById = async (userId, invoiceId)=> {
     }
   }
 }
+
+export const UpdateInvoiceById = async (userId, invoiceId, updatedData) => {
+  try {
+    const user = await Users.findOne({ _id: userId });
+    const invoiceIndex = user.invoices.findIndex((inv) => inv._id.toString() === invoiceId);
+    if (invoiceIndex === -1) {
+      return {
+        success: false,
+        message: "Invoice not found",
+      };
+    }
+
+    // Update the invoice with the new data
+    user.invoices[invoiceIndex] = {
+      ...user.invoices[invoiceIndex],
+      ...updatedData,
+    };
+
+    await user.save();
+    return {
+      success: true,
+      message: "Invoice updated successfully",
+      invoice: user.invoices[invoiceIndex],
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
