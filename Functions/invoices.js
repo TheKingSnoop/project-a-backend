@@ -61,41 +61,27 @@ export const GenerateInvoice = async (invoiceData) => {
   const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
 
   await AddInvoiceToDB(invoiceData, fileName);
+
   try {
-    // Generate PDF with Puppeteer
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    // Generate PDF using helper function
+    const pdfResult = await generatePDFBuffer(invoiceData);
+    if (!pdfResult.success) {
+      return { success: false, message: pdfResult.message };
+    }
 
-    const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
-
-    await page.setContent(invoiceHtmlTemplate);
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      footerTemplate: '<div style="font-size:8px; width:100%; text-align:center; margin-bottom:5px;">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
-      displayHeaderFooter: true,
-      margin: { top: "40px", bottom: "60px", left: "20px", right: "20px" },
-    });
-
-    await browser.close();
-
-    // Upload PDF to S3
-    const uploadParams = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: fileName,
-      Body: pdfBuffer,
-      ContentType: "application/pdf",
-      ContentDisposition: `attachment; filename="invoice-${Date.now()}.pdf"`,
-    };
-
-    const uploadResult = await s3.upload(uploadParams).promise();
+    // Upload PDF to S3 using helper function
+    const uploadResult = await uploadPDFToS3(pdfResult.pdfBuffer, fileName);
+    if (!uploadResult.success) {
+      return { success: false, message: uploadResult.message };
+    }
 
     return {
       success: true,
       message: "Invoice generated and uploaded successfully",
       payload: {
-        s3Location: uploadResult.Location,
-        s3Key: uploadResult.Key,
-        bucketName: uploadResult.Bucket,
+        s3Location: uploadResult.s3Location,
+        s3Key: uploadResult.s3Key,
+        bucketName: uploadResult.bucketName,
       },
     };
   } catch (error) {
@@ -127,34 +113,73 @@ export const GetInvoiceDownloadUrl = async (userId, invoiceId) => {
   }
 };
 
+// Helper function to generate PDF buffer from invoice data
+const generatePDFBuffer = async (invoiceData) => {
+  try {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
+
+    await page.setContent(invoiceHtmlTemplate);
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      footerTemplate: '<div style="font-size:8px; width:100%; text-align:center; margin-bottom:5px;">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
+      displayHeaderFooter: true,
+      margin: { top: "40px", bottom: "60px", left: "20px", right: "20px" },
+    });
+
+    await browser.close();
+    return { success: true, pdfBuffer };
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    return { success: false, message: error.message };
+  }
+};
+
+// Helper function to upload PDF to S3
+const uploadPDFToS3 = async (pdfBuffer, fileName) => {
+  try {
+    const uploadParams = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: fileName,
+      Body: pdfBuffer,
+      ContentType: "application/pdf",
+      ContentDisposition: `attachment; filename="invoice-${Date.now()}.pdf"`,
+    };
+
+    const uploadResult = await s3.upload(uploadParams).promise();
+    return {
+      success: true,
+      s3Location: uploadResult.Location,
+      s3Key: uploadResult.Key,
+      bucketName: uploadResult.Bucket,
+    };
+  } catch (error) {
+    console.error("Error uploading to S3:", error);
+    return { success: false, message: error.message };
+  }
+};
+
 // Helper function to delete an invoice from S3
-// export const DeleteInvoiceFromS3 = async (s3Key) => {
-//   try {
-//     const params = {
-//       Bucket: process.env.AWS_S3_BUCKET_NAME,
-//       Key: s3Key,
-//     };
+export const DeleteInvoiceFromS3 = async (s3Key) => {
+  try {
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: s3Key,
+    };
 
-//     await s3.deleteObject(params).promise();
+    await s3.deleteObject(params).promise();
 
-//     return {
-//       success: true,
-//       message: "Invoice deleted successfully",
-//     };
-//   } catch (error) {
-//     console.error("Error deleting invoice:", error);
-//     return { success: false, message: error.message };
-//   }
-// };
-
-// const browser = await puppeteer.launch();
-//     const page = await browser.newPage();
-
-// await page.setContent(html);
-//     const pdfBuffer = await page.pdf({ format: 'A4' });
-
-//     await browser.close();
-//     return pdfBuffer;
+    return {
+      success: true,
+      message: "Invoice deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting invoice:", error);
+    return { success: false, message: error.message };
+  }
+};
 
 export const AddInvoiceToDB = async (invoiceData, fileName) => {
   try {
@@ -236,28 +261,37 @@ export const AddInvoiceToDB = async (invoiceData, fileName) => {
   }
 };
 
-export const DeleteInvoiceById = async (userId, invoiceId)=> {
+export const DeleteInvoiceById = async (userId, invoiceId) => {
   try {
     const user = await Users.findOne({ _id: userId });
     user.invoices = user.invoices.filter((inv) => inv._id.toString() !== invoiceId);
     const deleteInvoice = await user.save();
-    if(deleteInvoice) {
+    if (deleteInvoice) {
       return {
         success: true,
         message: "Invoice deleted successfully",
-      }
+      };
     }
-  } catch (error){
+  } catch (error) {
     return {
       success: false,
       message: error.message,
-    }
+    };
   }
-}
+};
 
 export const UpdateInvoiceById = async (userId, invoiceId, updatedData) => {
+  let newS3Key = null; // Track new S3 key for rollback
+
   try {
     const user = await Users.findOne({ _id: userId });
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+
     const invoiceIndex = user.invoices.findIndex((inv) => inv._id.toString() === invoiceId);
     if (invoiceIndex === -1) {
       return {
@@ -266,22 +300,82 @@ export const UpdateInvoiceById = async (userId, invoiceId, updatedData) => {
       };
     }
 
-    // Update the invoice with the new data
-    user.invoices[invoiceIndex] = {
-      ...user.invoices[invoiceIndex],
+    // Get the current invoice and backup original data
+    const currentInvoice = user.invoices[invoiceIndex];
+    const oldAwsKey = currentInvoice.awsKey;
+    const originalInvoiceData = { ...(currentInvoice._doc || currentInvoice) };
+
+    // Update the invoice with the new data (but keep the old awsKey for now)
+    const updatedInvoice = {
+      ...originalInvoiceData,
       ...updatedData,
     };
 
-    await user.save();
+    // Generate new PDF with updated data
+    const pdfResult = await generatePDFBuffer(updatedInvoice);
+    if (!pdfResult.success) {
+      return { success: false, message: `PDF generation failed: ${pdfResult.message}` };
+    }
+
+    // Create new filename for the updated PDF
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const newFileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
+
+    // Upload new PDF to S3
+    const uploadResult = await uploadPDFToS3(pdfResult.pdfBuffer, newFileName);
+    if (!uploadResult.success) {
+      return { success: false, message: `S3 upload failed: ${uploadResult.message}` };
+    }
+
+    newS3Key = uploadResult.s3Key; // Store for potential rollback
+
+    // Update the invoice in MongoDB with new data and new awsKey
+    user.invoices[invoiceIndex] = {
+      ...updatedInvoice,
+      awsKey: uploadResult.s3Key,
+    };
+
+    // Save the updated user document
+    const saveResult = await user.save();
+    if (!saveResult) {
+      throw new Error("Failed to save updated invoice to database");
+    }
+
+    // Delete the old PDF from S3 (after successful update)
+    if (oldAwsKey && oldAwsKey !== uploadResult.s3Key) {
+      const deleteResult = await DeleteInvoiceFromS3(oldAwsKey);
+      if (!deleteResult.success) {
+        console.warn(`Warning: Failed to delete old PDF from S3: ${deleteResult.message}`);
+        // Don't fail the entire operation if old file deletion fails
+      }
+    }
+
     return {
       success: true,
-      message: "Invoice updated successfully",
+      message: "Invoice updated successfully with new PDF generated",
       invoice: user.invoices[invoiceIndex],
+      s3Info: {
+        newS3Key: uploadResult.s3Key,
+        s3Location: uploadResult.s3Location,
+        oldS3Key: oldAwsKey,
+      },
     };
   } catch (error) {
+    console.error("Error updating invoice:", error);
+
+    // Rollback: If we uploaded a new file but failed to update DB, clean up the new file
+    if (newS3Key) {
+      try {
+        await DeleteInvoiceFromS3(newS3Key);
+        console.log(`Rollback: Successfully deleted orphaned S3 file: ${newS3Key}`);
+      } catch (rollbackError) {
+        console.error(`Rollback failed: Could not delete S3 file ${newS3Key}:`, rollbackError);
+      }
+    }
+
     return {
       success: false,
-      message: error.message,
+      message: `Update failed: ${error.message}`,
     };
   }
 };
