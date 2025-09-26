@@ -60,7 +60,7 @@ export const GenerateInvoice = async (invoiceData) => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
 
-  await AddInvoiceToDB(invoiceData, fileName);
+  const addInvoiceToDBResult = await AddInvoiceToDB(invoiceData, fileName);
 
   try {
     // Generate PDF using helper function
@@ -82,6 +82,7 @@ export const GenerateInvoice = async (invoiceData) => {
         s3Location: uploadResult.s3Location,
         s3Key: uploadResult.s3Key,
         bucketName: uploadResult.bucketName,
+        dbInvoiceId : addInvoiceToDBResult.invoice.invoices.slice(-1)[0]._id,
       },
     };
   } catch (error) {
