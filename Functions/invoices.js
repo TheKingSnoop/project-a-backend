@@ -56,13 +56,12 @@ export const GetInvoiceById = async (userId, invoiceId) => {
 };
 
 export const GenerateInvoice = async (invoiceData) => {
-  // Generate unique filename for the PDF
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
-
-  const addInvoiceToDBResult = await AddInvoiceToDB(invoiceData, fileName);
-
   try {
+    // Generate unique filename for the PDF
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
+
+    const addInvoiceToDBResult = await AddInvoiceToDB(invoiceData, fileName);
     // Generate PDF using helper function
     const pdfResult = await generatePDFBuffer(invoiceData);
     if (!pdfResult.success) {
@@ -82,7 +81,7 @@ export const GenerateInvoice = async (invoiceData) => {
         s3Location: uploadResult.s3Location,
         s3Key: uploadResult.s3Key,
         bucketName: uploadResult.bucketName,
-        dbInvoiceId : addInvoiceToDBResult.invoice.invoices.slice(-1)[0]._id,
+        dbInvoiceId: addInvoiceToDBResult.invoice.invoices.slice(-1)[0]._id,
       },
     };
   } catch (error) {
@@ -265,15 +264,56 @@ export const AddInvoiceToDB = async (invoiceData, fileName) => {
 export const DeleteInvoiceById = async (userId, invoiceId) => {
   try {
     const user = await Users.findOne({ _id: userId });
-    user.invoices = user.invoices.filter((inv) => inv._id.toString() !== invoiceId);
-    const deleteInvoice = await user.save();
-    if (deleteInvoice) {
+    if (!user) {
       return {
-        success: true,
-        message: "Invoice deleted successfully",
+        success: false,
+        message: "User not found",
       };
     }
+
+    // Find the invoice to get the S3 key before deleting
+    const invoiceToDelete = user.invoices.find((inv) => inv._id.toString() === invoiceId);
+    if (!invoiceToDelete) {
+      return {
+        success: false,
+        message: "Invoice not found",
+      };
+    }
+
+    const s3Key = invoiceToDelete.awsKey;
+
+    // Remove invoice from MongoDB
+    user.invoices = user.invoices.filter((inv) => inv._id.toString() !== invoiceId);
+    const deleteInvoice = await user.save();
+
+    if (!deleteInvoice) {
+      return {
+        success: false,
+        message: "Failed to delete invoice from database",
+      };
+    }
+
+    // Delete PDF from S3 if s3Key exists
+    if (s3Key) {
+      const s3DeleteResult = await DeleteInvoiceFromS3(s3Key);
+      if (!s3DeleteResult.success) {
+        console.warn(`Warning: Invoice removed from database but failed to delete PDF from S3: ${s3DeleteResult.message}`);
+        // Don't fail the entire operation if S3 deletion fails
+        return {
+          success: true,
+          message: "Invoice deleted from database successfully, but PDF removal from S3 failed",
+          warning: s3DeleteResult.message,
+        };
+      }
+    }
+
+    return {
+      success: true,
+      message: "Invoice deleted successfully from both database and S3",
+      deletedS3Key: s3Key,
+    };
   } catch (error) {
+    console.error("Error deleting invoice:", error);
     return {
       success: false,
       message: error.message,
