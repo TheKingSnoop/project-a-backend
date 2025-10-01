@@ -1,9 +1,9 @@
 import express from "express";
 import { GenerateInvoice, GetInvoiceById, GetInvoiceDownloadUrl, GetInvoicesByUserId, DeleteInvoiceById, UpdateInvoiceById } from "../Functions/invoices.js";
-
+import checkAuth from "../middleware/check_auth.js";
 const router = express.Router();
 
-router.post("/generate", async (req, res) => {
+router.post("/generate", checkAuth, async (req, res) => {
   const invoiceData = req.body;
   try {
     const result = await GenerateInvoice(invoiceData);
@@ -21,7 +21,7 @@ router.post("/generate", async (req, res) => {
 });
 
 // Route to get download URL for an invoice
-router.get("/download-invoice/:userId/:invoiceId", async (req, res) => {
+router.get("/download-invoice/:userId/:invoiceId", checkAuth, async (req, res) => {
   const { userId, invoiceId } = req.params;
   try {
     const result = await GetInvoiceDownloadUrl(userId, invoiceId);
@@ -38,7 +38,7 @@ router.get("/download-invoice/:userId/:invoiceId", async (req, res) => {
   }
 });
 
-router.get("/get-invoice/:userId/:invoiceId", async (req, res) => {
+router.get("/get-invoice/:userId/:invoiceId", checkAuth, async (req, res) => {
   const { userId, invoiceId } = req.params;
   try {
     const invoice = await GetInvoiceById(userId, invoiceId);
@@ -55,7 +55,7 @@ router.get("/get-invoice/:userId/:invoiceId", async (req, res) => {
   }
 });
 
-router.get("/get-all-invoices/:userId", async (req, res) => {
+router.get("/get-all-invoices/:userId", checkAuth, async (req, res) => {
   const { userId } = req.params;
   try {
     const invoices = await GetInvoicesByUserId(userId);
@@ -72,7 +72,7 @@ router.get("/get-all-invoices/:userId", async (req, res) => {
   }
 });
 
-router.put("/update/:userId/:invoiceId", async (req, res) => {
+router.put("/update/:userId/:invoiceId", checkAuth, async (req, res) => {
   const { userId, invoiceId } = req.params;
   const updatedData = req.body;
 
@@ -91,7 +91,7 @@ router.put("/update/:userId/:invoiceId", async (req, res) => {
   }
 });
 
-router.delete("/delete/:userId/:invoiceId", async (req, res) => {
+router.delete("/delete/:userId/:invoiceId", checkAuth, async (req, res) => {
   const { userId, invoiceId } = req.params;
   try {
     const result = await DeleteInvoiceById(userId, invoiceId);
@@ -100,29 +100,12 @@ router.delete("/delete/:userId/:invoiceId", async (req, res) => {
     } else {
       res.status(500).send(result);
     }
-} catch (error) {
+  } catch (error) {
     res.status(500).send({
       success: false,
-      message: error.message
-    })
-}})
-
-// // Route to delete an invoice from S3
-// router.delete("/delete/:s3Key", async (req, res) => {
-//   const { s3Key } = req.params;
-//   try {
-//     const result = await DeleteInvoiceFromS3(decodeURIComponent(s3Key));
-//     if (result.success) {
-//       res.status(200).send(result);
-//     } else {
-//       res.status(500).send(result);
-//     }
-//   } catch (error) {
-//     res.status(500).send({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// });
+      message: error.message,
+    });
+  }
+});
 
 export default router;
