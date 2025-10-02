@@ -3,8 +3,11 @@ import jwt from "jsonwebtoken";
 const checkAuth = (req, res, next) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
-    const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-    req.userData = { email: decodedToken.email, userId: decodedToken.userId };
+    // console.log(token, "token in middleware");
+    console.log(process.env.JWT_SECRET, "jwt key in middleware");
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decodedToken, "decoded token in middleware");
+    req.userData = { id: decodedToken.id, name: decodedToken.name };
     next();
   } catch (error) {
     res.status(401).json({ message: "Authentication failed!" });
