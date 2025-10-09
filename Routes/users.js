@@ -1,5 +1,6 @@
 import express from "express";
-import { AddUser, GetUsers, Login } from "../Functions/users.js";
+import { AddUser, generateAccessToken, GetUsers, Login } from "../Functions/users.js";
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -52,6 +53,33 @@ router.post("/login", async (req, res) => {
       message: error.message,
     });
   }
+});
+
+router.post("/refresh-token", (req, res) => {
+  const { token, refreshToken } = req.body;
+
+  if (!token || !refreshToken) {
+    return res.status(400).send({
+      success: false,
+      message: "Token and refresh token are required",
+    });
+  }
+
+  jwt.verify(refreshToken, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).send({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+
+    const newAccessToken = generateAccessToken({ id: user.id, name: user.name });
+    res.send({
+      success: true,
+      accessToken: newAccessToken,
+      refreshToken: refreshToken,
+    });
+  });
 });
 
 export default router;
