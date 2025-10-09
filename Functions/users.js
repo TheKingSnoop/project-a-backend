@@ -17,6 +17,14 @@ export const GetUsers = async () => {
   }
 };
 
+export const generateAccessToken = (user) => {
+  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '30m' });
+};
+
+export const generateRefreshToken = (user) => {
+  return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1d' });
+};
+
 export const Login = async (loginData) => {
   try {
     const { email, password } = loginData;
@@ -33,13 +41,13 @@ export const Login = async (loginData) => {
         message: "Incorrect password",
       };
     } else {
-       const token = jwt.sign({ id: user._id, name: user.name }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-      });
+       const accessToken = generateAccessToken({ id: user._id, name: user.name });
+       const refreshToken = generateRefreshToken({ id: user._id, name: user.name });
       return {
         success: true,
         message: "Login successful",
-        token: token,
+        accessToken: accessToken,
+        refreshToken: refreshToken
       };
     }
   } catch (error) {
