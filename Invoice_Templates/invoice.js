@@ -1,5 +1,5 @@
 export function InvoiceTemplate(invoiceData) {
-    const html = `
+  const html = `
         <html>
             <head>
                 <style>
@@ -33,8 +33,8 @@ export function InvoiceTemplate(invoiceData) {
                     </div>
                     <div class="invoice-box">
                         <h3 class="blue-text">Invoice Number: ${invoiceData.referenceNumber}</h3>
-                        <p>Invoice Date: ${invoiceData.issueDate}</p>
-                        <p>Due Date: ${invoiceData.dueDate ? invoiceData.dueDate : ""}</p>
+                        <p>Invoice Date: ${formatDateToDDMMYYYY(invoiceData.issueDate)}</p>
+                        <p>Due Date: ${invoiceData.dueDate ? formatDateToDDMMYYYY(invoiceData.dueDate) : ""}</p>
                     </div>
                 </div>
                 <table border="1" cellpadding="10" cellspacing="0" width="100%">
@@ -47,12 +47,16 @@ export function InvoiceTemplate(invoiceData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${invoiceData.invoiceItems.map(item => `<tr>
+                        ${invoiceData.invoiceItems
+                          .map(
+                            (item) => `<tr>
                                 <td style='width:70%'>${item.description}</td>
                                 <td>${item.quantity}</td>
                                 <td>£${item.price}</td>
                                 <td>£${item.amount}</td>
-                            </tr>`).join('')}
+                            </tr>`
+                          )
+                          .join("")}
                     </tbody>
                 </table>
                 <div class="invoice-total">
@@ -71,7 +75,11 @@ export function InvoiceTemplate(invoiceData) {
             </body>
         </html>
         `;
-    return html;
+  return html;
 }
-
-
+//helper function to format date from YYYY-MM-DD to DD/MM/YYYY
+function formatDateToDDMMYYYY(dateString) {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`;
+}

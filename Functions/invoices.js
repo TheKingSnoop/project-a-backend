@@ -113,12 +113,13 @@ export const GetInvoiceDownloadUrl = async (userId, invoiceId) => {
   }
 };
 
+
+
 // Helper function to generate PDF buffer from invoice data
 const generatePDFBuffer = async (invoiceData) => {
   try {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-
     const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
 
     await page.setContent(invoiceHtmlTemplate);
