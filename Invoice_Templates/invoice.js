@@ -1,11 +1,5 @@
 export function InvoiceTemplate(invoiceData) {
-    function formatDateToDDMMYYYY(dateString) {
-        if (!dateString) return '';
-        const [year, month, day] = dateString.split('-');
-        return `${day}/${month}/${year}`;
-    }
-
-    const html = `
+  const html = `
         <html>
             <head>
                 <style>
@@ -53,12 +47,16 @@ export function InvoiceTemplate(invoiceData) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${invoiceData.invoiceItems.map(item => `<tr>
+                        ${invoiceData.invoiceItems
+                          .map(
+                            (item) => `<tr>
                                 <td style='width:70%'>${item.description}</td>
                                 <td>${item.quantity}</td>
                                 <td>£${item.price}</td>
                                 <td>£${item.amount}</td>
-                            </tr>`).join('')}
+                            </tr>`
+                          )
+                          .join("")}
                     </tbody>
                 </table>
                 <div class="invoice-total">
@@ -77,7 +75,11 @@ export function InvoiceTemplate(invoiceData) {
             </body>
         </html>
         `;
-    return html;
+  return html;
 }
-
-
+//helper function to format date from YYYY-MM-DD to DD/MM/YYYY
+function formatDateToDDMMYYYY(dateString) {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`;
+}
