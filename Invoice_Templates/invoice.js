@@ -8,22 +8,23 @@ export function InvoiceTemplate(invoiceData) {
                     thead tr { background-color: #f2f2f2; }
                     .title { text-align: center; }
                     .billing-info { display: flex; justify-content: space-between; }
-                    .invoice-box, .invoice-total { text-align: right; }
+                    .invoice-total, .bill-to { text-align: right; }
                     .blue-text { color: #005ac2; }
                     .lighter-text { color: #9ba3adff; } 
                 </style>
             </head>
             <body>
                 <h1 class="title blue-text">INVOICE</h1>
-                <div class="your-company">
-                    <p class="blue-text"><strong>${invoiceData.nameOfYourCompany ? invoiceData.nameOfYourCompany : ""}</strong></p>
-                    <p>${invoiceData.yourName} ${invoiceData.yourSurname}</p>
-                    <p>${invoiceData.yourAddress}</p>
-                    <p>${invoiceData.yourCity}, ${invoiceData.yourPostCode}</p>
-                    <p>${invoiceData.phoneNumber ? invoiceData.phoneNumber : ""}</p>
-                    <p>${invoiceData.yourEmail ? invoiceData.yourEmail : ""}</p>
-                </div>
+                
                 <div class="billing-info">
+                    <div class="your-company">
+                        <p class="blue-text"><strong>${invoiceData.nameOfYourCompany ? invoiceData.nameOfYourCompany : ""}</strong></p>
+                        <p>${invoiceData.yourName} ${invoiceData.yourSurname}</p>
+                        <p>${invoiceData.yourAddress}</p>
+                        <p>${invoiceData.yourCity}, ${invoiceData.yourPostCode}</p>
+                        <p>${invoiceData.phoneNumber ? invoiceData.phoneNumber : ""}</p>
+                        <p>${invoiceData.yourEmail ? invoiceData.yourEmail : ""}</p>
+                    </div>
                     <div class="bill-to">
                         <h3 class="blue-text">Bill To:</h3>
                         <p>${invoiceData.companyName ? invoiceData.companyName : ""}</p>
@@ -32,12 +33,14 @@ export function InvoiceTemplate(invoiceData) {
                         <p>${invoiceData.clientCity}, ${invoiceData.clientPostCode}</p>
                         <p>${invoiceData.clientEmail ? invoiceData.clientEmail : ""}</p>
                     </div>
-                    <div class="invoice-box">
+                </div>
+
+                <div class="invoice-box">
                         <h3 class="blue-text">Invoice Number: ${invoiceData.referenceNumber}</h3>
                         <p><span class="lighter-text">Invoice Date:</span> ${formatDateToDDMMYYYY(invoiceData.issueDate)}</p>
                         ${invoiceData.dueDate ? `<p><span class="lighter-text">Due Date:</span> ${formatDateToDDMMYYYY(invoiceData.dueDate)}</p>` : ""}
-                    </div>
                 </div>
+                
                 <table border="1" cellpadding="10" cellspacing="0" width="100%">
                     <thead>
                         <tr>
