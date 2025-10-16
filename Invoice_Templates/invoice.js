@@ -1,5 +1,5 @@
 export function InvoiceTemplate(invoiceData) {
-  const html = `
+    const html = `
         <html>
             <head>
                 <style>
@@ -10,6 +10,7 @@ export function InvoiceTemplate(invoiceData) {
                     .billing-info { display: flex; justify-content: space-between; }
                     .invoice-box, .invoice-total { text-align: right; }
                     .blue-text { color: #005ac2; }
+                    .lighter-text { color: #9ba3adff; } 
                 </style>
             </head>
             <body>
@@ -33,8 +34,8 @@ export function InvoiceTemplate(invoiceData) {
                     </div>
                     <div class="invoice-box">
                         <h3 class="blue-text">Invoice Number: ${invoiceData.referenceNumber}</h3>
-                        <p>Invoice Date: ${formatDateToDDMMYYYY(invoiceData.issueDate)}</p>
-                        <p>Due Date: ${invoiceData.dueDate ? formatDateToDDMMYYYY(invoiceData.dueDate) : ""}</p>
+                        <p><span class="lighter-text">Invoice Date:</span> ${formatDateToDDMMYYYY(invoiceData.issueDate)}</p>
+                        ${invoiceData.dueDate ? `<p><span class="lighter-text">Due Date:</span> ${formatDateToDDMMYYYY(invoiceData.dueDate)}</p>` : ""}
                     </div>
                 </div>
                 <table border="1" cellpadding="10" cellspacing="0" width="100%">
@@ -48,15 +49,15 @@ export function InvoiceTemplate(invoiceData) {
                     </thead>
                     <tbody>
                         ${invoiceData.invoiceItems
-                          .map(
-                            (item) => `<tr>
+            .map(
+                (item) => `<tr>
                                 <td style='width:70%'>${item.description}</td>
                                 <td>${item.quantity}</td>
                                 <td>£${item.price}</td>
                                 <td>£${item.amount}</td>
                             </tr>`
-                          )
-                          .join("")}
+            )
+            .join("")}
                     </tbody>
                 </table>
                 <div class="invoice-total">
@@ -67,19 +68,19 @@ export function InvoiceTemplate(invoiceData) {
                 </div>
                 <div class="bank-details">
                     <h3 class="blue-text">Bank Details:</h3>
-                    <p>Name on Account: ${invoiceData.nameOnAccount}</p>
-                    <p>Sort Code: ${invoiceData.sortCode}</p>
-                    <p>Account Number: ${invoiceData.accountNumber}</p>
-                    ${invoiceData.bankName ? `<p>Bank Name: ${invoiceData.bankName}</p>` : ""}
+                    <p><span class="lighter-text">Name on Account:</span> ${invoiceData.nameOnAccount}</p>
+                    <p><span class="lighter-text">Sort Code:</span> ${invoiceData.sortCode}</p>
+                    <p><span class="lighter-text">Account Number:</span> ${invoiceData.accountNumber}</p>
+                    ${invoiceData.bankName ? `<p><span class="lighter-text">Bank Name:</span> ${invoiceData.bankName}</p>` : ""}
                 </div>
             </body>
         </html>
         `;
-  return html;
+    return html;
 }
 //helper function to format date from YYYY-MM-DD to DD/MM/YYYY
 function formatDateToDDMMYYYY(dateString) {
-  if (!dateString) return "";
-  const [year, month, day] = dateString.split("-");
-  return `${day}/${month}/${year}`;
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
 }
