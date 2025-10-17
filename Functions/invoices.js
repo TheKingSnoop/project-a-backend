@@ -130,18 +130,18 @@ const generatePDFBuffer = async (invoiceData) => {
       ],
     };
     // In production, find Chrome executable path dynamically
-    if (process.env.NODE_ENV === "production") {
-      try {
-        // Find Chrome executable in the cache directory
-        const chromePath = execSync("find /opt/render/.cache/puppeteer -name chrome -type f", { encoding: "utf8" }).trim();
-        if (chromePath) {
-          launchOptions.executablePath = chromePath;
-          console.log("Found Chrome at:", chromePath);
-        }
-      } catch (findError) {
-        console.log("Could not find Chrome path automatically");
-      }
-    }
+    // if (process.env.NODE_ENV === "production") {
+    //   try {
+    //     // Find Chrome executable in the cache directory
+    //     const chromePath = execSync("find /opt/render/.cache/puppeteer -name chrome -type f", { encoding: "utf8" }).trim();
+    //     if (chromePath) {
+    //       launchOptions.executablePath = chromePath;
+    //       console.log("Found Chrome at:", chromePath);
+    //     }
+    //   } catch (findError) {
+    //     console.log("Could not find Chrome path automatically");
+    //   }
+    // }
     console.log("Launching browser with options:", launchOptions);
 
     const browser = await puppeteer.launch(launchOptions);
