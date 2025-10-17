@@ -3,7 +3,7 @@ import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
 import Users from "../Schemas/user.js";
-import Invoices from "../Schemas/invoice.js";
+import { execSync } from "child_process";
 
 dotenv.config();
 
@@ -113,12 +113,38 @@ export const GetInvoiceDownloadUrl = async (userId, invoiceId) => {
   }
 };
 
-
-
 // Helper function to generate PDF buffer from invoice data
 const generatePDFBuffer = async (invoiceData) => {
   try {
-    const browser = await puppeteer.launch();
+    const launchOptions = {
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process",
+        "--disable-gpu",
+      ],
+    };
+    // In production, find Chrome executable path dynamically
+    if (process.env.NODE_ENV === "production") {
+      try {
+        // Find Chrome executable in the cache directory
+        const chromePath = execSync("find /opt/render/.cache/puppeteer -name chrome -type f", { encoding: "utf8" }).trim();
+        if (chromePath) {
+          launchOptions.executablePath = chromePath;
+          console.log("Found Chrome at:", chromePath);
+        }
+      } catch (findError) {
+        console.log("Could not find Chrome path automatically");
+      }
+    }
+    console.log("Launching browser with options:", launchOptions);
+
+    const browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
     const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
 
