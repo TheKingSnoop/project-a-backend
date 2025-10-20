@@ -129,19 +129,31 @@ const generatePDFBuffer = async (invoiceData) => {
         "--disable-gpu",
       ],
     };
-    // In production, find Chrome executable path dynamically
-    // if (process.env.NODE_ENV === "production") {
-    //   try {
-    //     // Find Chrome executable in the cache directory
-    //     const chromePath = execSync("find /opt/render/.cache/puppeteer -name chrome -type f", { encoding: "utf8" }).trim();
-    //     if (chromePath) {
-    //       launchOptions.executablePath = chromePath;
-    //       console.log("Found Chrome at:", chromePath);
-    //     }
-    //   } catch (findError) {
-    //     console.log("Could not find Chrome path automatically");
-    //   }
-    // }
+    // For production (Render), try to use system Chrome first
+    if (process.env.NODE_ENV === "production") {
+      // Try common Chrome/Chromium paths on Linux
+      const possiblePaths = [
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium",
+        process.env.PUPPETEER_EXECUTABLE_PATH,
+      ].filter(Boolean);
+
+      for (const chromePath of possiblePaths) {
+        try {
+          // Check if the executable exists
+          execSync(`which ${chromePath}`, { stdio: "ignore" });
+          launchOptions.executablePath = chromePath;
+          console.log("Using Chrome at:", chromePath);
+          break;
+        } catch (error) {
+          // Path doesn't exist, try next one
+          continue;
+        }
+      }
+    }
+
     console.log("Launching browser with options:", launchOptions);
 
     const browser = await puppeteer.launch(launchOptions);
