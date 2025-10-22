@@ -115,6 +115,7 @@ export const GetInvoiceDownloadUrl = async (userId, invoiceId) => {
 
 // Helper function to generate PDF buffer from invoice data
 const generatePDFBuffer = async (invoiceData) => {
+  let browser = null;
   try {
     const launchOptions = {
       headless: 'new',
@@ -160,34 +161,67 @@ const generatePDFBuffer = async (invoiceData) => {
     }
 
     console.log('Launching browser with options:', launchOptions);
-    const browser = await puppeteer.launch(launchOptions);
+    browser = await puppeteer.launch(launchOptions);
+    console.log('Browser launched successfully');
     
-    // Create new page and wait for it to be ready
+    // Create new page with explicit wait
     const page = await browser.newPage();
+    console.log('Page created');
     
-    // Wait for the page to be fully loaded
-    await page.goto('data:text/html,<html></html>', { waitUntil: 'domcontentloaded' });
+    // Add explicit delay to ensure page is fully initialized
+    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('Initial delay completed');
     
-    // Set viewport for consistent rendering
-    await page.setViewport({ width: 1200, height: 800 });
-    
-    // Now set the content
+    // Try a simpler approach - directly set content without goto
     const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
-    await page.setContent(invoiceHtmlTemplate, { waitUntil: 'networkidle0' });
+    console.log('Generated invoice template');
+    
+    // Set content with a retry mechanism
+    let contentSet = false;
+    let retries = 3;
+    
+    while (!contentSet && retries > 0) {
+      try {
+        await page.setContent(invoiceHtmlTemplate, { 
+          waitUntil: 'domcontentloaded',
+          timeout: 10000 
+        });
+        contentSet = true;
+        console.log('Content set successfully');
+      } catch (error) {
+        console.log(`Content setting failed, retries left: ${retries - 1}`);
+        retries--;
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          throw error;
+        }
+      }
+    }
     
     // Generate PDF
+    console.log('Generating PDF...');
     const pdfBuffer = await page.pdf({
       format: "A4",
       footerTemplate: '<div style="font-size:8px; width:100%; text-align:center; margin-bottom:5px;">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
       displayHeaderFooter: true,
       margin: { top: "40px", bottom: "60px", left: "20px", right: "20px" },
     });
+    console.log('PDF generated successfully');
 
-    await browser.close();
     return { success: true, pdfBuffer };
   } catch (error) {
     console.error("Error generating PDF:", error);
     return { success: false, message: error.message };
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+        console.log('Browser closed');
+      } catch (closeError) {
+        console.error('Error closing browser:', closeError);
+      }
+    }
   }
 };
 
