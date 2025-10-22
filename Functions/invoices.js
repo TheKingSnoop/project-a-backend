@@ -3,7 +3,7 @@ import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
 import Users from "../Schemas/user.js";
-import { execSync } from "child_process";
+import { chromium } from "playwright";
 
 dotenv.config();
 
@@ -114,113 +114,37 @@ export const GetInvoiceDownloadUrl = async (userId, invoiceId) => {
 };
 
 // Helper function to generate PDF buffer from invoice data
+
 const generatePDFBuffer = async (invoiceData) => {
   let browser = null;
   try {
-    const launchOptions = {
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
-    };
+    console.log("Launching Playwright browser...");
+    browser = await chromium.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
-    // For production, try to find Chrome
-    if (process.env.NODE_ENV === 'production') {
-      const possiblePaths = [
-        '/usr/bin/google-chrome-stable',
-        '/usr/bin/google-chrome',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium'
-      ];
-
-      let chromeFound = false;
-      for (const chromePath of possiblePaths) {
-        try {
-          const fs = await import('fs');
-          if (fs.existsSync(chromePath)) {
-            launchOptions.executablePath = chromePath;
-            console.log('Using Chrome at:', chromePath);
-            chromeFound = true;
-            break;
-          }
-        } catch (error) {
-          continue;
-        }
-      }
-
-      if (!chromeFound) {
-        console.log('No Chrome executable found, trying default Puppeteer behavior');
-      }
-    }
-
-    console.log('Launching browser with options:', launchOptions);
-    browser = await puppeteer.launch(launchOptions);
-    console.log('Browser launched successfully');
-    
-    // Create new page with explicit wait
+    console.log("Creating new page...");
     const page = await browser.newPage();
-    console.log('Page created');
-    
-    // Add explicit delay to ensure page is fully initialized
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('Initial delay completed');
-    
-    // Try a simpler approach - directly set content without goto
+
+    console.log("Setting content...");
     const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
-    console.log('Generated invoice template');
-    
-    // Set content with a retry mechanism
-    let contentSet = false;
-    let retries = 3;
-    
-    while (!contentSet && retries > 0) {
-      try {
-        await page.setContent(invoiceHtmlTemplate, { 
-          waitUntil: 'domcontentloaded',
-          timeout: 10000 
-        });
-        contentSet = true;
-        console.log('Content set successfully');
-      } catch (error) {
-        console.log(`Content setting failed, retries left: ${retries - 1}`);
-        retries--;
-        if (retries > 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        } else {
-          throw error;
-        }
-      }
-    }
-    
-    // Generate PDF
-    console.log('Generating PDF...');
+    await page.setContent(invoiceHtmlTemplate);
+
+    console.log("Generating PDF...");
     const pdfBuffer = await page.pdf({
       format: "A4",
-      footerTemplate: '<div style="font-size:8px; width:100%; text-align:center; margin-bottom:5px;">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
-      displayHeaderFooter: true,
       margin: { top: "40px", bottom: "60px", left: "20px", right: "20px" },
     });
-    console.log('PDF generated successfully');
 
+    console.log("PDF generated successfully");
     return { success: true, pdfBuffer };
   } catch (error) {
     console.error("Error generating PDF:", error);
     return { success: false, message: error.message };
   } finally {
     if (browser) {
-      try {
-        await browser.close();
-        console.log('Browser closed');
-      } catch (closeError) {
-        console.error('Error closing browser:', closeError);
-      }
+      await browser.close();
     }
   }
 };
