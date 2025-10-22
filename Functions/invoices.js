@@ -117,45 +117,50 @@ export const GetInvoiceDownloadUrl = async (userId, invoiceId) => {
 const generatePDFBuffer = async (invoiceData) => {
   try {
     const launchOptions = {
-      headless: "new",
+      headless: 'new',
       args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process",
-        "--disable-gpu",
-      ],
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ]
     };
-    // For production (Render), try to use system Chrome first
-    if (process.env.NODE_ENV === "production") {
-      // Try common Chrome/Chromium paths on Linux
-      const possiblePaths = [
-        "/usr/bin/google-chrome-stable",
-        "/usr/bin/google-chrome",
-        "/usr/bin/chromium-browser",
-        "/usr/bin/chromium",
-        process.env.PUPPETEER_EXECUTABLE_PATH,
-      ].filter(Boolean);
 
+    // For production, try to find Chrome
+    if (process.env.NODE_ENV === 'production') {
+      const possiblePaths = [
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium'
+      ];
+
+      let chromeFound = false;
       for (const chromePath of possiblePaths) {
         try {
-          // Check if the executable exists
-          execSync(`which ${chromePath}`, { stdio: "ignore" });
-          launchOptions.executablePath = chromePath;
-          console.log("Using Chrome at:", chromePath);
-          break;
+          // Use fs to check if file exists instead of execSync
+          const fs = await import('fs');
+          if (fs.existsSync(chromePath)) {
+            launchOptions.executablePath = chromePath;
+            console.log('Using Chrome at:', chromePath);
+            chromeFound = true;
+            break;
+          }
         } catch (error) {
-          // Path doesn't exist, try next one
           continue;
         }
       }
+
+      if (!chromeFound) {
+        console.log('No Chrome executable found, trying default Puppeteer behavior');
+      }
     }
 
-    console.log("Launching browser with options:", launchOptions);
-
+    console.log('Launching browser with options:', launchOptions);
     const browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
     const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
