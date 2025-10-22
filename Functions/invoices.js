@@ -142,7 +142,6 @@ const generatePDFBuffer = async (invoiceData) => {
       let chromeFound = false;
       for (const chromePath of possiblePaths) {
         try {
-          // Use fs to check if file exists instead of execSync
           const fs = await import('fs');
           if (fs.existsSync(chromePath)) {
             launchOptions.executablePath = chromePath;
@@ -162,10 +161,21 @@ const generatePDFBuffer = async (invoiceData) => {
 
     console.log('Launching browser with options:', launchOptions);
     const browser = await puppeteer.launch(launchOptions);
+    
+    // Create new page and wait for it to be ready
     const page = await browser.newPage();
+    
+    // Wait for the page to be fully loaded
+    await page.goto('data:text/html,<html></html>', { waitUntil: 'domcontentloaded' });
+    
+    // Set viewport for consistent rendering
+    await page.setViewport({ width: 1200, height: 800 });
+    
+    // Now set the content
     const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
-
-    await page.setContent(invoiceHtmlTemplate);
+    await page.setContent(invoiceHtmlTemplate, { waitUntil: 'networkidle0' });
+    
+    // Generate PDF
     const pdfBuffer = await page.pdf({
       format: "A4",
       footerTemplate: '<div style="font-size:8px; width:100%; text-align:center; margin-bottom:5px;">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
