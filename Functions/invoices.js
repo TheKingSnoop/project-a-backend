@@ -1,4 +1,3 @@
-import puppeteer from "puppeteer";
 import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
