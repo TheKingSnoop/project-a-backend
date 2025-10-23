@@ -118,10 +118,15 @@ const generatePDFBuffer = async (invoiceData) => {
   let browser = null;
   try {
     console.log("Launching Playwright browser...");
-    browser = await chromium.launch({
+    
+    const launchOptions = {
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+      args: process.env.NODE_ENV === 'production' 
+        ? ["--no-sandbox", "--disable-setuid-sandbox"]
+        : [] // Local development uses default args
+    };
+
+    browser = await chromium.launch(launchOptions);
 
     console.log("Creating new page...");
     const page = await browser.newPage();
@@ -140,7 +145,29 @@ const generatePDFBuffer = async (invoiceData) => {
     return { success: true, pdfBuffer };
   } catch (error) {
     console.error("Error generating PDF:", error);
-    return { success: false, message: error.message };
+    
+    // Provide helpful error messages for common issues
+    if (error.message.includes("Executable doesn't exist")) {
+      return { 
+        success: false, 
+        message: "Playwright browsers not installed. Run 'npm run setup' to install them.",
+        code: "BROWSERS_NOT_INSTALLED"
+      };
+    }
+    
+    if (error.message.includes("browserType.launch")) {
+      return {
+        success: false,
+        message: "Failed to launch browser. Ensure Playwright is properly installed.",
+        code: "BROWSER_LAUNCH_FAILED"
+      };
+    }
+    
+    return { 
+      success: false, 
+      message: error.message,
+      code: "PDF_GENERATION_FAILED"
+    };
   } finally {
     if (browser) {
       await browser.close();
