@@ -96,9 +96,6 @@ const invoiceSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    dueDate: {
-        type: String
-    },
     nameOnAccount: {
         type: String
     },
