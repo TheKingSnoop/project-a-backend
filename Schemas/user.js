@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import invoiceSchema from "./invoice.js";
+import clientSchema from "./client.js";
 
 const userSchema = mongoose.Schema({
     title: {
@@ -27,6 +28,7 @@ const userSchema = mongoose.Schema({
         default: Date.now,
     },
     invoices: [invoiceSchema],
+    clients: [clientSchema]
 
 });
 
