@@ -1,5 +1,5 @@
 import express from "express";
-import { AddUser, generateAccessToken, GetUsers, Login, UpdateUser } from "../Functions/users.js";
+import { AddUser, generateAccessToken, GetUsers, Login, UpdateUser, GetUserById } from "../Functions/users.js";
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();

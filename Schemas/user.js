@@ -40,6 +40,9 @@ const userSchema = mongoose.Schema({
   telephone: {
     type: String,
   },
+  companyName: {
+    type: String,
+  },
   invoices: [invoiceSchema],
   clients: [clientSchema],
 });
