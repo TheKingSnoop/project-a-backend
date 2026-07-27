@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import usersRouter from "./Routes/users.js";
 import s3 from "./s3Client.js";
 import invoicesRouter from "./Routes/invoices.js";
+import clientsRouter from "./Routes/clients.js";
 import mongoose from "mongoose";
 
 dotenv.config();
@@ -47,6 +48,8 @@ app.get("/", (req, res) => {
 app.use("/users", usersRouter);
 
 app.use("/invoices", invoicesRouter);
+
+app.use("/clients", clientsRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
