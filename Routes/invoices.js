@@ -1,5 +1,5 @@
 import express from "express";
-import { GenerateInvoice, GetInvoiceById, GetInvoiceDownloadUrl, GetInvoicesByUserId, DeleteInvoiceById, UpdateInvoiceById } from "../Functions/invoices.js";
+import { GenerateInvoice, GetInvoiceById, GetInvoiceDownloadUrl, GetInvoicesByUserId, DeleteInvoiceById, UpdateInvoiceById, GetInvoiceFormData } from "../Functions/invoices.js";
 import checkAuth from "../middleware/check_auth.js";
 const router = express.Router();
 
@@ -63,6 +63,24 @@ router.get("/get-all-invoices/:userId", checkAuth, async (req, res) => {
       res.status(200).send(invoices);
     } else {
       res.status(404).send(invoices);
+    }
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.get("/form/:userId/:clientId", checkAuth, async (req, res) => {
+  console.log("Received request for invoice form data");
+  const { userId, clientId } = req.params;
+  try {
+    const result = await GetInvoiceFormData(userId, clientId);
+    if (result.success) {
+      res.status(200).send(result);
+    } else {
+      res.status(404).send(result);
     }
   } catch (error) {
     res.status(500).send({

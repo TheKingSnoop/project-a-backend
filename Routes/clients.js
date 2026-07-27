@@ -1,5 +1,5 @@
 import express from "express";
-import { AddClient } from "../Functions/clients.js";
+import { AddClient, GetClientList } from "../Functions/clients.js";
 
 const router = express.Router();
 
