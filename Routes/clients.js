@@ -1,13 +1,26 @@
 import express from "express";
 import { AddClient } from "../Functions/clients.js";
 
-
 const router = express.Router();
+
+router.get("/list/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const result = await GetClientList(userId);
+  if (result.success) {
+    res.status(200).json(result);
+  } else {
+    res.status(500).json(result);
+  }
+});
 
 router.post("/add", async (req, res) => {
   const { userId, clientData } = req.body;
   const result = await AddClient(userId, clientData);
-  res.json(result);
+  if (result.success) {
+    res.status(201).json(result);
+  } else {
+    res.status(500).json(result);
+  }
 });
 
 export default router;

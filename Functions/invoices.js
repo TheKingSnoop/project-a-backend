@@ -3,8 +3,96 @@ import s3 from "../s3Client.js";
 import dotenv from "dotenv";
 import Users from "../Schemas/user.js";
 import { chromium } from "playwright";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const invoiceTemplatePath = path.join(__dirname, "../Assets/invoice.json");
+
+let invoiceTemplateCache = null;
+
+const getInvoiceTemplate = async () => {
+  if (!invoiceTemplateCache) {
+    const raw = await fs.readFile(invoiceTemplatePath, "utf8");
+    invoiceTemplateCache = JSON.parse(raw);
+  }
+  return structuredClone(invoiceTemplateCache); // avoid mutating cache
+};
+
+const applyDefaultValues = (elements, prefill) => {
+  if (!Array.isArray(elements)) return;
+
+  for (const el of elements) {
+    if (el?.name && Object.prototype.hasOwnProperty.call(prefill, el.name)) {
+      el.defaultValue = prefill[el.name];
+    }
+
+    if (Array.isArray(el.elements)) {
+      applyDefaultValues(el.elements, prefill);
+    }
+    if (Array.isArray(el.templateElements)) {
+      applyDefaultValues(el.templateElements, prefill);
+    }
+  }
+};
+
+export const GetInvoiceFormData = async (userId, clientId) => {
+  try {
+    const user = await Users.findById(userId)
+      .select("name surname email telephone address city postCode clients")
+      .lean();
+
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    const client = user.clients?.find((c) => c._id?.toString() === clientId);
+    if (!client) {
+      return { success: false, message: "Client not found for this user" };
+    }
+
+    const prefill = {
+      // page2
+      nameOfYourCompany: user.companyName || "",
+      yourName: user.name || "",
+      yourSurname: user.surname || "",
+      yourAddress: user.address || "",
+      yourCity: user.city || "",
+      yourPostCode: user.postCode || "",
+      yourEmail: user.email || "",
+      phoneNumber: user.telephone || "",
+
+      // page3
+      companyName: client.company_name || "",
+      clientName: client.first_name || "",
+      clientSurname: client.surname || "",
+      clientAddress: client.address || "",
+      clientCity: client.city || "",
+      clientPostCode: client.post_code || "",
+      clientEmail: client.email || "",
+    };
+
+    const form = await getInvoiceTemplate();
+
+    for (const page of form.pages || []) {
+      applyDefaultValues(page.elements, prefill);
+    }
+
+    return {
+      success: true,
+      payload: form, // full template, prepopulated
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
 
 export const GetInvoicesByUserId = async (userId) => {
   try {
@@ -118,12 +206,10 @@ const generatePDFBuffer = async (invoiceData) => {
   let browser = null;
   try {
     console.log("Launching Playwright browser...");
-    
+
     const launchOptions = {
       headless: true,
-      args: process.env.NODE_ENV === 'production' 
-        ? ["--no-sandbox", "--disable-setuid-sandbox"]
-        : [] // Local development uses default args
+      args: process.env.NODE_ENV === "production" ? ["--no-sandbox", "--disable-setuid-sandbox"] : [], // Local development uses default args
     };
 
     browser = await chromium.launch(launchOptions);
@@ -145,28 +231,28 @@ const generatePDFBuffer = async (invoiceData) => {
     return { success: true, pdfBuffer };
   } catch (error) {
     console.error("Error generating PDF:", error);
-    
+
     // Provide helpful error messages for common issues
     if (error.message.includes("Executable doesn't exist")) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         message: "Playwright browsers not installed. Run 'npm run setup' to install them.",
-        code: "BROWSERS_NOT_INSTALLED"
+        code: "BROWSERS_NOT_INSTALLED",
       };
     }
-    
+
     if (error.message.includes("browserType.launch")) {
       return {
         success: false,
         message: "Failed to launch browser. Ensure Playwright is properly installed.",
-        code: "BROWSER_LAUNCH_FAILED"
+        code: "BROWSER_LAUNCH_FAILED",
       };
     }
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       message: error.message,
-      code: "PDF_GENERATION_FAILED"
+      code: "PDF_GENERATION_FAILED",
     };
   } finally {
     if (browser) {
