@@ -15,7 +15,7 @@ router.get("/list/:userId", async (req, res) => {
 
 router.post("/add/:id", async (req, res) => {
   const { id: userId } = req.params;
-  const { clientData } = req.body;
+  const clientData  = req.body;
   const result = await AddClient(userId, clientData);
   if (result.success) {
     res.status(201).json(result);
