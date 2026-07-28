@@ -43,7 +43,7 @@ const applyDefaultValues = (elements, prefill) => {
 export const GetInvoiceFormData = async (userId, clientId) => {
   try {
     const user = await Users.findById(userId)
-      .select("name surname email telephone address city postCode clients")
+      .select("name companyName surname email telephone address city postCode clients")
       .lean();
 
     if (!user) {
