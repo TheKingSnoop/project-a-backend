@@ -1,5 +1,5 @@
 import express from "express";
-import { AddClient, GetClientList } from "../Functions/clients.js";
+import { AddClient, GetClientList, DeleteClient } from "../Functions/clients.js";
 
 const router = express.Router();
 
@@ -19,6 +19,16 @@ router.post("/add/:id", async (req, res) => {
   const result = await AddClient(userId, clientData);
   if (result.success) {
     res.status(201).json(result);
+  } else {
+    res.status(500).json(result);
+  }
+});
+
+router.delete("/delete/:userId/:clientId", async (req, res) => {
+  const { userId, clientId } = req.params;
+  const result = await DeleteClient(userId, clientId);
+  if (result.success) {
+    res.status(200).json(result);
   } else {
     res.status(500).json(result);
   }

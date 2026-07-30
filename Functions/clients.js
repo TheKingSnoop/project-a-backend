@@ -44,3 +44,33 @@ export const AddClient = async (userId, clientData) => {
     };
   }
 };
+
+export const DeleteClient = async (userId, clientId) => {
+  try {
+    const user = await Users.findById(userId);
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+    const clientIndex = user.clients.findIndex(client => client._id.toString() === clientId);
+    if (clientIndex === -1) {
+      return {
+        success: false,
+        message: "Client not found",
+      };
+    }
+    user.clients.splice(clientIndex, 1);
+    await user.save();
+    return {
+      success: true,
+      message: "Client deleted successfully",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "An error occurred while deleting the client",
+    };
+  }
+};
