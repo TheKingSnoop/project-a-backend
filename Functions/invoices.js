@@ -1,11 +1,98 @@
-import puppeteer from "puppeteer";
 import { InvoiceTemplate } from "../Invoice_Templates/invoice.js";
 import s3 from "../s3Client.js";
 import dotenv from "dotenv";
 import Users from "../Schemas/user.js";
-import { execSync } from "child_process";
+import { chromium } from "playwright";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const invoiceTemplatePath = path.join(__dirname, "../Assets/invoice.json");
+
+let invoiceTemplateCache = null;
+
+const getInvoiceTemplate = async () => {
+  if (!invoiceTemplateCache) {
+    const raw = await fs.readFile(invoiceTemplatePath, "utf8");
+    invoiceTemplateCache = JSON.parse(raw);
+  }
+  return structuredClone(invoiceTemplateCache); // avoid mutating cache
+};
+
+const applyDefaultValues = (elements, prefill) => {
+  if (!Array.isArray(elements)) return;
+
+  for (const el of elements) {
+    if (el?.name && Object.prototype.hasOwnProperty.call(prefill, el.name)) {
+      el.defaultValue = prefill[el.name];
+    }
+
+    if (Array.isArray(el.elements)) {
+      applyDefaultValues(el.elements, prefill);
+    }
+    if (Array.isArray(el.templateElements)) {
+      applyDefaultValues(el.templateElements, prefill);
+    }
+  }
+};
+
+export const GetInvoiceFormData = async (userId, clientId) => {
+  try {
+    const user = await Users.findById(userId)
+      .select("name companyName surname email telephone address city postCode clients")
+      .lean();
+
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    const client = user.clients?.find((c) => c._id?.toString() === clientId);
+    if (!client) {
+      return { success: false, message: "Client not found for this user" };
+    }
+
+    const prefill = {
+      // page2
+      nameOfYourCompany: user.companyName || "",
+      yourName: user.name || "",
+      yourSurname: user.surname || "",
+      yourAddress: user.address || "",
+      yourCity: user.city || "",
+      yourPostCode: user.postCode || "",
+      yourEmail: user.email || "",
+      phoneNumber: user.telephone || "",
+
+      // page3
+      companyName: client.company_name || "",
+      clientName: client.first_name || "",
+      clientSurname: client.surname || "",
+      clientAddress: client.address || "",
+      clientCity: client.city || "",
+      clientPostCode: client.post_code || "",
+      clientEmail: client.email || "",
+    };
+
+    const form = await getInvoiceTemplate();
+
+    for (const page of form.pages || []) {
+      applyDefaultValues(page.elements, prefill);
+    }
+
+    return {
+      success: true,
+      payload: form, // full template, prepopulated
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
 
 export const GetInvoicesByUserId = async (userId) => {
   try {
@@ -114,65 +201,63 @@ export const GetInvoiceDownloadUrl = async (userId, invoiceId) => {
 };
 
 // Helper function to generate PDF buffer from invoice data
+
 const generatePDFBuffer = async (invoiceData) => {
+  let browser = null;
   try {
+    console.log("Launching Playwright browser...");
+
     const launchOptions = {
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process",
-        "--disable-gpu",
-      ],
+      headless: true,
+      args: process.env.NODE_ENV === "production" ? ["--no-sandbox", "--disable-setuid-sandbox"] : [], // Local development uses default args
     };
-    // For production (Render), try to use system Chrome first
-    if (process.env.NODE_ENV === "production") {
-      // Try common Chrome/Chromium paths on Linux
-      const possiblePaths = [
-        "/usr/bin/google-chrome-stable",
-        "/usr/bin/google-chrome",
-        "/usr/bin/chromium-browser",
-        "/usr/bin/chromium",
-        process.env.PUPPETEER_EXECUTABLE_PATH,
-      ].filter(Boolean);
 
-      for (const chromePath of possiblePaths) {
-        try {
-          // Check if the executable exists
-          execSync(`which ${chromePath}`, { stdio: "ignore" });
-          launchOptions.executablePath = chromePath;
-          console.log("Using Chrome at:", chromePath);
-          break;
-        } catch (error) {
-          // Path doesn't exist, try next one
-          continue;
-        }
-      }
-    }
+    browser = await chromium.launch(launchOptions);
 
-    console.log("Launching browser with options:", launchOptions);
-
-    const browser = await puppeteer.launch(launchOptions);
+    console.log("Creating new page...");
     const page = await browser.newPage();
-    const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
 
+    console.log("Setting content...");
+    const invoiceHtmlTemplate = InvoiceTemplate(invoiceData);
     await page.setContent(invoiceHtmlTemplate);
+
+    console.log("Generating PDF...");
     const pdfBuffer = await page.pdf({
       format: "A4",
-      footerTemplate: '<div style="font-size:8px; width:100%; text-align:center; margin-bottom:5px;">Page <span class="pageNumber"></span>/<span class="totalPages"></span></div>',
-      displayHeaderFooter: true,
       margin: { top: "40px", bottom: "60px", left: "20px", right: "20px" },
     });
 
-    await browser.close();
+    console.log("PDF generated successfully");
     return { success: true, pdfBuffer };
   } catch (error) {
     console.error("Error generating PDF:", error);
-    return { success: false, message: error.message };
+
+    // Provide helpful error messages for common issues
+    if (error.message.includes("Executable doesn't exist")) {
+      return {
+        success: false,
+        message: "Playwright browsers not installed. Run 'npm run setup' to install them.",
+        code: "BROWSERS_NOT_INSTALLED",
+      };
+    }
+
+    if (error.message.includes("browserType.launch")) {
+      return {
+        success: false,
+        message: "Failed to launch browser. Ensure Playwright is properly installed.",
+        code: "BROWSER_LAUNCH_FAILED",
+      };
+    }
+
+    return {
+      success: false,
+      message: error.message,
+      code: "PDF_GENERATION_FAILED",
+    };
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 };
 
@@ -247,7 +332,6 @@ export const AddInvoiceToDB = async (invoiceData, fileName) => {
       clientEmail,
       referenceNumber,
       issueDate,
-      dueDate,
       nameOnAccount,
       sortCode,
       accountNumber,
@@ -278,7 +362,6 @@ export const AddInvoiceToDB = async (invoiceData, fileName) => {
       clientEmail,
       referenceNumber,
       issueDate,
-      dueDate,
       nameOnAccount,
       sortCode,
       accountNumber,

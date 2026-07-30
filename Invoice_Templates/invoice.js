@@ -38,7 +38,6 @@ export function InvoiceTemplate(invoiceData) {
                 <div class="invoice-box">
                         <h3 class="blue-text">Invoice Number: ${invoiceData.referenceNumber}</h3>
                         <p><span class="lighter-text">Invoice Date:</span> ${formatDateToDDMMYYYY(invoiceData.issueDate)}</p>
-                        ${invoiceData.dueDate ? `<p><span class="lighter-text">Due Date:</span> ${formatDateToDDMMYYYY(invoiceData.dueDate)}</p>` : ""}
                 </div>
                 
                 <table border="1" cellpadding="10" cellspacing="0" width="100%">

@@ -1,5 +1,5 @@
 import express from "express";
-import { AddUser, generateAccessToken, GetUsers, Login } from "../Functions/users.js";
+import { AddUser, generateAccessToken, GetUsers, Login, UpdateUser, GetUserById } from "../Functions/users.js";
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
@@ -12,6 +12,23 @@ router.get("/all-users", async (req, res) => {
       res.status(200).send(result);
     } else {
       res.status(500).send(result);
+    }
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.get("/user/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const result = await GetUserById(userId);
+    if (result.success) {
+      res.status(200).send(result);
+    } else {
+      res.status(404).send(result);
     }
   } catch (error) {
     res.status(500).send({
@@ -80,6 +97,24 @@ router.post("/refresh-token", (req, res) => {
       refreshToken: refreshToken,
     });
   });
+});
+
+router.put("/update-user/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const updateData = req.body;
+    const result = await UpdateUser(userId, updateData);
+    if (result.success) {
+      res.status(200).send(result);
+    } else {
+      res.status(404).send(result);
+    }
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
 export default router;
