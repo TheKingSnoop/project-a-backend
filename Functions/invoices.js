@@ -149,6 +149,7 @@ export const GenerateInvoice = async (invoiceData) => {
     const fileName = `invoices/invoice-${Date.now()}-${timestamp}.pdf`;
 
     const addInvoiceToDBResult = await AddInvoiceToDB(invoiceData, fileName);
+
     // Generate PDF using helper function
     const pdfResult = await generatePDFBuffer(invoiceData);
     if (!pdfResult.success) {

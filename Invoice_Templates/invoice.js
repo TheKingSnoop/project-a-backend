@@ -28,7 +28,7 @@ export function InvoiceTemplate(invoiceData) {
                     <div class="bill-to">
                         <h3 class="blue-text">Bill To:</h3>
                         <p>${invoiceData.companyName ? invoiceData.companyName : ""}</p>
-                        <p>${invoiceData.clientName} ${invoiceData.clientSurname}</p>
+                        <p>${invoiceData.clientName} ${invoiceData.clientSurname ? invoiceData.clientSurname : ""}</p>
                         <p>${invoiceData.clientAddress}</p>
                         <p>${invoiceData.clientCity}, ${invoiceData.clientPostCode}</p>
                         <p>${invoiceData.clientEmail ? invoiceData.clientEmail : ""}</p>
@@ -36,7 +36,7 @@ export function InvoiceTemplate(invoiceData) {
                 </div>
 
                 <div class="invoice-box">
-                        <h3 class="blue-text">Invoice Number: ${invoiceData.referenceNumber}</h3>
+                        <h3 class="blue-text">Reference Number: ${invoiceData.referenceNumber}</h3>
                         <p><span class="lighter-text">Invoice Date:</span> ${formatDateToDDMMYYYY(invoiceData.issueDate)}</p>
                 </div>
                 
@@ -70,7 +70,7 @@ export function InvoiceTemplate(invoiceData) {
                 </div>
                 <div class="bank-details">
                     <h3 class="blue-text">Bank Details:</h3>
-                    <p><span class="lighter-text">Name on Account:</span> ${invoiceData.nameOnAccount}</p>
+                    <p><span class="lighter-text">Account Name:</span> ${invoiceData.nameOnAccount}</p>
                     <p><span class="lighter-text">Sort Code:</span> ${invoiceData.sortCode}</p>
                     <p><span class="lighter-text">Account Number:</span> ${invoiceData.accountNumber}</p>
                     ${invoiceData.bankName ? `<p><span class="lighter-text">Bank Name:</span> ${invoiceData.bankName}</p>` : ""}

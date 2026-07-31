@@ -89,7 +89,7 @@ const invoiceSchema = new mongoose.Schema({
         type: String
     },
     referenceNumber: {
-        type: Number,
+        type: String,
         required: true,
     },
     issueDate: {
