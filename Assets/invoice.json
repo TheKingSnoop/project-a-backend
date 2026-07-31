@@ -121,7 +121,7 @@
               "name": "clientSurname",
               "startWithNewLine": false,
               "title": "Client Surname:",
-              "isRequired": true
+              "isRequired": false
             },
             {
               "type": "text",
