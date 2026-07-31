@@ -55,8 +55,8 @@ export function InvoiceTemplate(invoiceData) {
                 (item) => `<tr>
                                 <td style='width:70%'>${item.description}</td>
                                 <td>${item.quantity}</td>
-                                <td>£${item.price}</td>
-                                <td>£${item.amount}</td>
+                                <td>£${formatMoneyNumber(item.price)}</td>
+                                <td>£${formatMoneyNumber(item.amount)}</td>
                             </tr>`
             )
             .join("")}
@@ -64,9 +64,9 @@ export function InvoiceTemplate(invoiceData) {
                 </table>
                 <div class="invoice-total">
                     <h3 class="blue-text">Invoice Total:</h3>
-                    <p>Subtotal: £${invoiceData.invoiceItemsTotal}</p>
-                    ${invoiceData.vatPercentage ? `<p>VAT (${invoiceData.vatPercentage}%): £${invoiceData.vat}</p>` : ""}
-                    <h4 style="border-top: 1px solid #005ac2; display: inline; border-bottom: 1px solid #005ac2; background-color: #d8e2ff;"><strong>Total: £${invoiceData.finalTotal}</strong></h4>
+                    ${invoiceData.vatPercentage ? `<p>Subtotal: £${formatMoneyNumber(invoiceData.invoiceItemsTotal)}</p>` : ""}
+                    ${invoiceData.vatPercentage ? `<p>VAT (${invoiceData.vatPercentage}%): £${formatMoneyNumber(invoiceData.vat)}</p>` : ""}
+                    <h4 style="border-top: 1px solid #005ac2; display: inline; border-bottom: 1px solid #005ac2; background-color: #d8e2ff;"><strong>Total: £${formatMoneyNumber(invoiceData.finalTotal)}</strong></h4>
                 </div>
                 <div class="bank-details">
                     <h3 class="blue-text">Bank Details:</h3>
@@ -86,3 +86,9 @@ function formatDateToDDMMYYYY(dateString) {
     const [year, month, day] = dateString.split("-");
     return `${day}/${month}/${year}`;
 }
+
+const formatMoneyNumber = (value) =>
+  Number(value || 0).toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });

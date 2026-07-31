@@ -43,6 +43,18 @@ const userSchema = mongoose.Schema({
   companyName: {
     type: String,
   },
+  bankName: {
+    type: String,
+  },
+  accountNumber: {
+    type: String,
+  },
+  sortCode: {
+    type: String,
+  },
+  accountName: {
+    type: String,
+  },
   invoices: [invoiceSchema],
   clients: [clientSchema],
 });

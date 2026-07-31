@@ -19,6 +19,7 @@
               "type": "text",
               "name": "titleOfInvoice",
               "title": "Title of Invoice:",
+              "description": "File name to be saved in your account. This will not appear on the invoice.",
               "isRequired": true
             }
           ]
