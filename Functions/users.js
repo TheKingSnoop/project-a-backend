@@ -20,7 +20,7 @@ export const GetUsers = async () => {
 export const GetUserById = async (userId) => {
   try {
     const user = await Users.findById(userId)
-      .select("title name surname email telephone address city postCode clients companyName")
+      .select("title name surname email telephone address city postCode clients companyName bankName accountNumber sortCode accountName")
       .lean();
 
     if (!user) {
@@ -43,6 +43,10 @@ export const GetUserById = async (userId) => {
         postCode: user.postCode,
         clients: user.clients,
         companyName: user.companyName,
+        bankName: user.bankName,
+        accountNumber: user.accountNumber,
+        sortCode: user.sortCode,
+        accountName: user.accountName,
       },
     };
   } catch (error) {
