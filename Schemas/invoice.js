@@ -89,14 +89,14 @@ const invoiceSchema = new mongoose.Schema({
         type: String
     },
     referenceNumber: {
-        type: Number,
+        type: String,
         required: true,
     },
     issueDate: {
         type: String,
         required: true
     },
-    nameOnAccount: {
+    accountName: {
         type: String
     },
     sortCode: {

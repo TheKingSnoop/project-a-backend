@@ -19,6 +19,7 @@
               "type": "text",
               "name": "titleOfInvoice",
               "title": "Title of Invoice:",
+              "description": "File name to be saved in your account. This will not appear on the invoice.",
               "isRequired": true
             }
           ]
@@ -121,7 +122,7 @@
               "name": "clientSurname",
               "startWithNewLine": false,
               "title": "Client Surname:",
-              "isRequired": true
+              "isRequired": false
             },
             {
               "type": "text",
@@ -292,8 +293,8 @@
           "elements": [
             {
               "type": "text",
-              "name": "nameOnAccount",
-              "title": "Name on Account:",
+              "name": "accountName",
+              "title": "Account Name:",
               "isRequired": true
             },
             {
