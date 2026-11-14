@@ -96,7 +96,7 @@ const invoiceSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    nameOnAccount: {
+    accountName: {
         type: String
     },
     sortCode: {

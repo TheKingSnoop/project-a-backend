@@ -43,7 +43,7 @@ const applyDefaultValues = (elements, prefill) => {
 export const GetInvoiceFormData = async (userId, clientId) => {
   try {
     const user = await Users.findById(userId)
-      .select("name companyName surname email telephone address city postCode clients")
+      .select("name companyName surname email telephone address city postCode clients accountName bankName accountNumber sortCode")
       .lean();
 
     if (!user) {
@@ -74,6 +74,12 @@ export const GetInvoiceFormData = async (userId, clientId) => {
       clientCity: client.city || "",
       clientPostCode: client.post_code || "",
       clientEmail: client.email || "",
+
+      // page6
+      accountName: user.accountName || "",
+      sortCode: user.sortCode || "",
+      accountNumber: user.accountNumber || "",
+      bankName: user.bankName || ""
     };
 
     const form = await getInvoiceTemplate();
@@ -333,7 +339,7 @@ export const AddInvoiceToDB = async (invoiceData, fileName) => {
       clientEmail,
       referenceNumber,
       issueDate,
-      nameOnAccount,
+      accountName,
       sortCode,
       accountNumber,
       bankName,
@@ -363,7 +369,7 @@ export const AddInvoiceToDB = async (invoiceData, fileName) => {
       clientEmail,
       referenceNumber,
       issueDate,
-      nameOnAccount,
+      accountName,
       sortCode,
       accountNumber,
       bankName,
