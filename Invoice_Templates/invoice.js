@@ -70,7 +70,7 @@ export function InvoiceTemplate(invoiceData) {
                 </div>
                 <div class="bank-details">
                     <h3 class="blue-text">Bank Details:</h3>
-                    <p><span class="lighter-text">Account Name:</span> ${invoiceData.nameOnAccount}</p>
+                    <p><span class="lighter-text">Account Name:</span> ${invoiceData.accountName}</p>
                     <p><span class="lighter-text">Sort Code:</span> ${invoiceData.sortCode}</p>
                     <p><span class="lighter-text">Account Number:</span> ${invoiceData.accountNumber}</p>
                     ${invoiceData.bankName ? `<p><span class="lighter-text">Bank Name:</span> ${invoiceData.bankName}</p>` : ""}
